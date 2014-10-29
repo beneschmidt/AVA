@@ -2,6 +2,8 @@ package com.ava.client;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
@@ -11,22 +13,16 @@ import java.util.TreeMap;
 import com.ava.ueb01.NodeDefinition;
 import com.ava.utils.FileReaderHelper;
 
-public class Client {
-	
-	private final String host;
-	private final int port;
+public class Node {
 
-	public Client(String host, int port) {
-		this.host = host;
-		this.port = port;
+	private final NodeDefinition nodeDefinition;
+
+	public Node(NodeDefinition nodeDefinition) {
+		this.nodeDefinition = nodeDefinition;
 	}
 
-	public String getHost() {
-		return host;
-	}
-
-	public int getPort() {
-		return port;
+	public NodeDefinition getNodeDefinition() {
+		return nodeDefinition;
 	}
 
 	public static void main(String[] args) {
@@ -35,23 +31,36 @@ public class Client {
 			Map<Integer, NodeDefinition> nodes = readNodesFromFile(args[0]);
 			NodeDefinition nodeDefinition = askForNodeToWorkWith(nodes);
 			System.out.println("Mein Node: " + nodeDefinition);
-
-			Socket skt = new Socket(nodeDefinition.getIp(), nodeDefinition.getPort());
-			BufferedReader in = new BufferedReader(new InputStreamReader(skt.getInputStream()));
-			System.out.print("Received string: '");
-
-			while (!in.ready()) {
-			}
-			System.out.println(in.readLine()); // Read one line and output it
-
-			System.out.print("'\n");
-			in.close();
+			System.out.println("Los gehts!");
+			Node node = new Node(nodeDefinition);
+			node.startServer();
 		} catch (Exception e) {
 			System.out.print("Whoops! It didn't work!\n");
 			e.printStackTrace();
 		}
 	}
 
+	public void startServer() {
+		try {
+			ServerSocket serverSocket = new ServerSocket(nodeDefinition.getPort());
+			Socket skt = serverSocket.accept();
+			System.out.print("Server has connected!\n");
+			PrintWriter out = new PrintWriter(skt.getOutputStream(), true);
+			out.close();
+			skt.close();
+			serverSocket.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.print("Whoops! It didn't work!\n");
+		}
+	}
+
+	/**
+	 * Fraegt uber die Konsole die Node-ID ab und sucht aus den Nodes den entsprechenden Eintrag
+	 * @param nodes
+	 * @return gesuchten Node
+	 * @throws Exception
+	 */
 	private static NodeDefinition askForNodeToWorkWith(Map<Integer, NodeDefinition> nodes) throws Exception {
 		boolean keepOnReading = true;
 		while (keepOnReading) {
@@ -72,6 +81,11 @@ public class Client {
 		throw new Exception("nothing found!");
 	}
 
+	/**
+	 * Liest alle Node-Definitionen aus einer gegebenen Datei aus
+	 * @param filename
+	 * @return Map mit Nodes
+	 */
 	private static Map<Integer, NodeDefinition> readNodesFromFile(String filename) {
 		FileReaderHelper fileReaderHelper = new FileReaderHelper(filename);
 		Map<Integer, NodeDefinition> nodes = new TreeMap<Integer, NodeDefinition>();
