@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="PrinterClient" default="rebuild" basedir=".">
+<project name="NodeImplementation" default="rebuild" basedir=".">
 	<!-- root-Property f�r Zugriff auf das root-Verzeichnis -->
 	<property name="root" location=".." />
 	
@@ -24,6 +24,10 @@
 	</path>
 	
 	<target name="rebuild">
+		<antcall target="clean"/>
+		<antcall target="init"/>
+		<antcall target="compile.all.sources"/>
+		<antcall target="package"/>
 	</target>
 	
 	<!-- Anlegen der vorausgesetzten Grundstruktur -->
@@ -72,7 +76,6 @@
 			<fileset dir="${classes}" />
 
 			<manifest>
-				<attribute name="Implementation-Vendor" value="${firma}" />
 				<attribute name="Implementation-Title" value="${jartitle}" />
 				<attribute name="Implementation-Version" value="${version}" />
 				<attribute name="Main-Class" value="${mainclass}" />
@@ -85,7 +88,6 @@
 		<jar destfile="${dist}/${sourcejarname}">
 			<fileset dir="${source}" />
 			<manifest>
-				<attribute name="Implementation-Vendor" value="${firma}" />
 				<attribute name="Implementation-Title" value="${jartitle}" />
 				<attribute name="Implementation-Version" value="${version}" />
 				<attribute name="Built-By" value="${user.name}" />
@@ -125,7 +127,7 @@
 		<antcall target="copy.setup" />
 	</target>
 	
-	<!-- Kopieren der ben�tigten Dateien in den Setup-Ordner -->
+	<!-- Kopieren der benoetigten Dateien in den Setup-Ordner -->
 	<target name="copy.setup" depends="init">
 		<echo>processing new setup folder=${config}/${clientName}</echo>
 		<!-- Setup-Ordner erstellen -->
