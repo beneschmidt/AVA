@@ -1,16 +1,16 @@
 package com.ava;
 
-import java.util.Map;
+import java.util.List;
 
 import com.ava.ueb01.NodeDefinition;
 
 public interface NodeServer {
 
-	void startServer();
+    void startServerAsThread();
 
-	void closeServer();
+    void closeServer();
 
-	void connectToOtherNodes(Map<Integer, NodeDefinition> othersNodes);
-	
-	void broadcastMessage();
+    void connectToOtherNodes(List<NodeDefinition> othersNodes);
+
+    void broadcastMessage();
 }

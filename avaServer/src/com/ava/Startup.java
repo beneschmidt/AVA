@@ -15,25 +15,33 @@ public class Startup {
 
     public static void main(String[] args) {
 	try {
-	    System.out.println("Argumente:" + Arrays.toString(args));
-	    Map<Integer, NodeDefinition> nodes = readNodesFromFile(args[0]);
+	    System.out.println("Arguments:" + Arrays.toString(args));
+	    if (args.length != 2) {
+		System.out.println("usage: java -jar {jarname} {node definition file} {graph file}");
+		System.exit(0);
+	    }
+	    Map<Integer, NodeDefinition> nodes = readNodeDefinitionsFromFile(args[0]);
 	    NodeDefinition nodeDefinition = askForNodeToWorkWith(nodes);
-	    System.out.println("Mein Node: " + nodeDefinition);
+	    System.out.println("I am: " + nodeDefinition);
 	    final Node node = new Node(nodeDefinition);
-	    new Thread(new Runnable() {
-		public void run() {
-		    node.startServer();
-		}
-	    }).start();
-	    node.connectToOtherNodes(nodes);
+	    List<NodeDefinition> neighbours = loadOwnNeighboursFromFile(nodeDefinition.getId(), nodes, args[1]);
+	    System.out.println("Neightbours: " + neighbours);
+	    node.startServerAsThread();
+	    node.connectToOtherNodes(neighbours);
 	    node.broadcastMessage();
-	    System.out.println("start sleeping");
 	    Thread.sleep(10000);
 	    node.closeAllConnections();
 	} catch (Exception e) {
 	    System.out.print("Whoops! It didn't work!\n");
 	    e.printStackTrace();
 	}
+    }
+
+    private static List<NodeDefinition> loadOwnNeighboursFromFile(Integer ownId, Map<Integer, NodeDefinition> nodes, String fileName) {
+	FileReaderHelper helper = new FileReaderHelper(fileName);
+	List<String> fileContent = helper.readFileAsRows();
+	NodeGraph nodeGraph = new NodeGraph(nodes, fileContent);
+	return nodeGraph.getDefinitionsForNode(ownId);
     }
 
     /**
@@ -70,7 +78,7 @@ public class Startup {
      * @param filename
      * @return Map mit Nodes
      */
-    private static Map<Integer, NodeDefinition> readNodesFromFile(String filename) {
+    private static Map<Integer, NodeDefinition> readNodeDefinitionsFromFile(String filename) {
 	FileReaderHelper fileReaderHelper = new FileReaderHelper(filename);
 	Map<Integer, NodeDefinition> nodes = new TreeMap<Integer, NodeDefinition>();
 	List<String> lines = fileReaderHelper.readFileAsRows();

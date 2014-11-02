@@ -8,6 +8,11 @@ import java.net.Socket;
 import com.ava.utils.ResourceHelper;
 import com.ava.utils.TimeUtils;
 
+/**
+ * Thread to read input from a socket
+ * 
+ * @author Benne
+ */
 public class SocketInputReader extends Thread {
     private static final String EXIT = "E";
     private Socket socket;
