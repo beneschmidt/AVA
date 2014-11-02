@@ -38,14 +38,12 @@ public class Node implements NodeServer {
 			Map<Integer, NodeDefinition> nodes = readNodesFromFile(args[0]);
 			NodeDefinition nodeDefinition = askForNodeToWorkWith(nodes);
 			System.out.println("Mein Node: " + nodeDefinition);
-			System.out.println("Los gehts!");
 			final Node node = new Node(nodeDefinition);
 			new Thread(new Runnable() {
 				public void run() {
 					node.startServer();
 				}
 			}).start();
-			;
 			node.connectToOtherNodes(nodes);
 			node.broadcastMessage();
 			Thread.sleep(10000);
