@@ -12,56 +12,49 @@ import java.util.regex.Pattern;
  */
 public class NodeDefinition {
 
-	private final int id;
-	private final String ip;
-	private final int port;
+    private final int id;
+    private final String ip;
+    private final int port;
 
-	public NodeDefinition(String stringDefinition) {
-		List<String> values = parseDefinitionByString(stringDefinition);
-		id = Integer.parseInt(values.get(0));
-		ip = values.get(1);
-		port = Integer.parseInt(values.get(2));
+    public NodeDefinition(String stringDefinition) {
+	List<String> values = parseDefinitionByString(stringDefinition);
+	id = Integer.parseInt(values.get(0));
+	ip = values.get(1);
+	port = Integer.parseInt(values.get(2));
+    }
+
+    private List<String> parseDefinitionByString(String stringDefinition) {
+	String pattern = "(\\d{0,2}) (.*):(\\d{1,6})";
+	// Create a Pattern object
+	Pattern r = Pattern.compile(pattern);
+	List<String> values = new LinkedList<String>();
+
+	// Now create matcher object.
+	Matcher m = r.matcher(stringDefinition);
+	if (m.find()) {
+	    values.add(m.group(1));
+	    values.add(m.group(2));
+	    values.add(m.group(3));
+	    return values;
+	} else {
+	    throw new RuntimeException("Kann String leider nicht parsen!" + stringDefinition);
 	}
+    }
 
-	private List<String> parseDefinitionByString(String stringDefinition){
-		String pattern = "(\\d{0,2}) (.*):(\\d{1,6})";
-		// Create a Pattern object
-		Pattern r = Pattern.compile(pattern);
-		List<String> values = new LinkedList<String>();
+    public int getId() {
+	return id;
+    }
 
-		// Now create matcher object.
-		Matcher m = r.matcher(stringDefinition);
-		if (m.find()) {
-			values.add(m.group(1));
-			values.add(m.group(2));
-			values.add(m.group(3));
-			return values;
-		} else {
-			throw new RuntimeException("Kann String leider nicht parsen!"
-					+ stringDefinition);
-		}
-	}
+    public String getIp() {
+	return ip;
+    }
 
-	public int getId() {
-		return id;
-	}
+    public int getPort() {
+	return port;
+    }
 
-	public String getIp() {
-		return ip;
-	}
-
-	public int getPort() {
-		return port;
-	}
-
-	@Override
-	public String toString() {
-		return "NodeDefinition [id=" + id + ", ip=" + ip + ", port=" + port
-				+ "]";
-	}
-
-	public static void main(String[] args) throws Exception {
-		NodeDefinition nd = new NodeDefinition("1 isl-s-01:5000");
-		System.out.println(nd);
-	}
+    @Override
+    public String toString() {
+	return "NodeDefinition [id=" + id + ", ip=" + ip + ", port=" + port + "]";
+    }
 }

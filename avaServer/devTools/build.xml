@@ -2,17 +2,17 @@
 <project name="NodeImplementation" default="rebuild" basedir=".">
 	<!-- root-Property f�r Zugriff auf das root-Verzeichnis -->
 	<property name="root" location=".." />
-	
+
 	<!-- Angabe des zu ladenden Properties-Files -->
 	<property file="build.properties" />
-	
+
 	<!-- die Libraries laden, die ben�tigt werden -->
 	<path id="libraries">
 		<fileset dir="${lib}">
 			<include name="**/*.jar" />
 		</fileset>
 	</path>
-	
+
 	<!-- die libraries f�r die Test-Dateien laden -->
 	<path id="test-classpath">
 		<!-- die oben referenzierten Libraries k�nnen auch hier wieder verwendet werden -->
@@ -22,36 +22,37 @@
 		<pathelement location="${classes}" />
 		<pathelement location="${testclasses}" />
 	</path>
-	
+
 	<target name="rebuild">
-		<antcall target="clean"/>
-		<antcall target="init"/>
-		<antcall target="compile.all.sources"/>
-		<antcall target="package"/>
+		<antcall target="clean" />
+		<antcall target="init" />
+		<antcall target="compile.all.sources" />
+		<antcall target="package" />
+		<antcall target="copy.setup" />
 	</target>
-	
+
 	<!-- Anlegen der vorausgesetzten Grundstruktur -->
 	<target name="init">
 		<!-- Ordner anlegen -->
 		<mkdir dir="${build}" />
 	</target>
-	
+
 	<!-- Bereinigen der Ordnerstruktur, die beim build erstellt wird -->
 	<target name="clean" depends="init">
 		<delete dir="${build}" failonerror="true" />
 	</target>
-	
+
 	<!-- gemeinsamer Kompilieraufruf aller ben�tigten Sources -->
 	<target name="compile.all.sources" depends="init">
 		<antcall target="compile" />
 		<antcall target="compile.test" />
 	</target>
-	
+
 	<!-- Kompilieren der Quelldateien und Speichern in einem bestimmten Ordner -->
 	<target name="compile" depends="init">
 		<!-- Speicherort zuerst anlegen -->
 		<mkdir dir="${classes}" />
-		
+
 		<!-- Mithilfe der Source die Java-Dateien suchen und kompilieren -->
 		<javac srcdir="${source}" destdir="${classes}" debug="on" failonerror="true" includeantruntime="true">
 			<!-- der classpath, der ben�tigt wird, kann hier spezifiziert werden -->
@@ -60,7 +61,7 @@
 			</classpath>
 		</javac>
 	</target>
-	
+
 	<!-- die kompilierten class-Dateien in einer JAR verpacken -->
 	<target name="package" depends="init">
 		<!-- aktuelle Zeit merken -->
@@ -70,7 +71,7 @@
 
 		<!-- Pfad f�r den Speicherort der Jar erstellen -->
 		<mkdir dir="${dist}" />
-		
+
 		<!-- .class-Dateien in JAR verpacken -->
 		<jar destfile="${dist}/${jarname}">
 			<fileset dir="${classes}" />
@@ -95,7 +96,7 @@
 			</manifest>
 		</jar>
 	</target>
-	
+
 	<!-- JUNIT-Java-Dateien kompilieren -->
 	<target name="compile.test">
 		<mkdir dir="${testclasses}" />
@@ -105,7 +106,7 @@
 			</classpath>
 		</javac>
 	</target>
-	
+
 	<!-- JUNIT-Tests ausf�hren -->
 	<target name="junit" depends="compile.test">
 		<junit haltonfailure="true">
@@ -116,7 +117,7 @@
 			<test name="${junittest}" />
 		</junit>
 	</target>
-	
+
 	<!-- das finale Setup erstellen -->
 	<target name="setup" depends="init">
 		<taskdef resource="net/sf/antcontrib/antlib.xml">
@@ -126,23 +127,18 @@
 		<!-- Aufruf des Setup-Copy-Tasks -->
 		<antcall target="copy.setup" />
 	</target>
-	
+
 	<!-- Kopieren der benoetigten Dateien in den Setup-Ordner -->
 	<target name="copy.setup" depends="init">
-		<echo>processing new setup folder=${config}/${clientName}</echo>
+		<echo>processing new setup folder=${setup}</echo>
 		<!-- Setup-Ordner erstellen -->
 		<mkdir dir="${setup}" />
-		<!-- create log folder -->
-		<mkdir dir="${setup}/log" />
-		<!-- create config folder -->
-		<mkdir dir="${setupconfig}" />
 
 		<!-- copy exe, resource folder, properties files and log4j-config -->
-		<copy tofile="${setup}/${exeName}" file="${exe4j}/${exeName}" />
-		<copy todir="${setupconfig}">
-			<fileset dir="${config}" excludes="**/*.properties_utf8,**/*.template" />
+		<copy tofile="${setup}/${jarname}" file="${dist}/${jarname}" />
+		<copy todir="${setup}">
+			<fileset dir="${resources}" />
 		</copy>
-		<copy tofile="${setupconfig}/${clientConfigName}" file="${config}/${clientConfigName}" />
 	</target>
 
 	<!-- create JavaDoc -->
@@ -159,5 +155,5 @@
 			<![CDATA[<i>Copyright &#169; 2012 Fresenius Netcare GmbH. All Rights Reserved.</i>]]></bottom>
 </javadoc>
 </target>
-		
+
 </project>

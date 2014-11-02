@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 
 import com.ava.utils.ResourceHelper;
+import com.ava.utils.TimeUtils;
 
 public class SocketInputReader extends Thread {
     private static final String EXIT = "E";
@@ -22,7 +23,8 @@ public class SocketInputReader extends Thread {
 
 	    String inputLine = "";
 	    while ((inputLine = in.readLine()) != null) {
-		System.out.println(inputLine);
+		String currentTime = TimeUtils.getCurrentTimestampString();
+		System.out.println(currentTime + ": " + inputLine);
 		if (inputLine.equals(EXIT)) {
 		    System.out.println("Connection will be closed");
 		    break;
