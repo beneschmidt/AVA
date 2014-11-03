@@ -15,7 +15,7 @@ public class SocketOutputWriter {
 	    OutputStream out = socket.getOutputStream();
 	    writer = new OutputStreamWriter(out);
 	    writer.write(message);
-	    System.out.println(TimeUtils.getCurrentTimestampString() + ": " + message);
+	    System.out.println("[OUT] "+TimeUtils.getCurrentTimestampString() + ": " + message);
 	} catch (Exception e) {
 	    System.err.println("Verbindung fehlgeschlagen!");
 	} finally {

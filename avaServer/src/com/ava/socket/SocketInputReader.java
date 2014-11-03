@@ -29,7 +29,7 @@ public class SocketInputReader extends Thread {
 	    String inputLine = "";
 	    while ((inputLine = in.readLine()) != null) {
 		String currentTime = TimeUtils.getCurrentTimestampString();
-		System.out.println(currentTime + ": " + inputLine);
+		System.out.println("[IN] " + currentTime + ": " + inputLine);
 		if (inputLine.equals(EXIT)) {
 		    System.out.println("Connection will be closed");
 		    break;

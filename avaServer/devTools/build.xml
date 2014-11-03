@@ -28,6 +28,7 @@
 		<antcall target="init" />
 		<antcall target="compile.all.sources" />
 		<antcall target="package" />
+		<antcall target="package.graphcreator" />
 		<antcall target="copy.setup" />
 	</target>
 
@@ -97,6 +98,27 @@
 		</jar>
 	</target>
 
+	<!-- die kompilierten class-Dateien in einer JAR verpacken -->
+	<target name="package.graphcreator" depends="init">
+		<!-- aktuelle Zeit merken -->
+		<tstamp>
+			<format property="time" pattern="dd.MM.yyyy HH:mm:ss" locale="de,DE" />
+		</tstamp>
+
+		<!-- .class-Dateien in JAR verpacken -->
+		<jar destfile="${dist}/${graphjarname}">
+			<fileset dir="${classes}" />
+
+			<manifest>
+				<attribute name="Implementation-Title" value="${graphjartitle}" />
+				<attribute name="Implementation-Version" value="${version}" />
+				<attribute name="Main-Class" value="${graphmainclass}" />
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Built-Time" value="${time}" />
+			</manifest>
+		</jar>
+	</target>
+
 	<!-- JUNIT-Java-Dateien kompilieren -->
 	<target name="compile.test">
 		<mkdir dir="${testclasses}" />
@@ -136,6 +158,7 @@
 
 		<!-- copy exe, resource folder, properties files and log4j-config -->
 		<copy tofile="${setup}/${jarname}" file="${dist}/${jarname}" />
+		<copy tofile="${setup}/${graphjarname}" file="${dist}/${graphjarname}" />
 		<copy todir="${setup}">
 			<fileset dir="${resources}" />
 		</copy>

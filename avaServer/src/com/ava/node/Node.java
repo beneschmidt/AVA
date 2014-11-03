@@ -1,7 +1,9 @@
 package com.ava.node;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,18 +31,24 @@ public class Node implements NodeServer {
 	for (NodeDefinition nextDef : nodesToConnect) {
 	    if (nextDef.getId() != nodeDefinition.getId()) {
 		boolean connected = false;
-		while (!connected) {
+		int connectionTries = 0;
+		while (!connected && connectionTries < 10) {
 		    try {
-			Socket socket = new Socket(nextDef.getIp(), nextDef.getPort());
-			connectedSockets.add(socket);
-			System.out.println("Verbindung hergestellt: " + nextDef);
+			connectionToNode(nextDef, connectionTries);
 			connected = true;
 		    } catch (Exception e) {
 			System.err.println("Verbindung mit port " + nextDef.getPort() + " fehlgeschlagen!");
+			connectionTries++;
 		    }
 		}
 	    }
 	}
+    }
+
+    private void connectionToNode(NodeDefinition nextDef, int connectionTries) throws UnknownHostException, IOException {
+	Socket socket = new Socket(nextDef.getIp(), nextDef.getPort());
+	connectedSockets.add(socket);
+	System.out.println("Verbindung hergestellt: " + nextDef);
     }
 
     @Override
@@ -75,13 +83,16 @@ public class Node implements NodeServer {
     @Override
     public void closeServer() {
 	if (serverSocket != null && !serverSocket.isClosed()) {
+	    closeAllConnections();
 	    ResourceHelper.close(serverSocket);
 	}
     }
 
     public void closeAllConnections() {
 	try {
+	    SocketOutputWriter writer = new SocketOutputWriter();
 	    for (Socket socket : connectedSockets) {
+		writer.writeMessage(socket, nodeDefinition+" goes offline");
 		ResourceHelper.close(socket);
 	    }
 	    System.out.println("All connections closed");

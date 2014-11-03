@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-
 import com.ava.graph.NodeGraph;
+import com.ava.menu.MainMenu;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
 import com.ava.utils.FileReaderHelper;
@@ -16,6 +16,7 @@ import com.ava.utils.FileReaderHelper;
 public class Startup {
 
     public static void main(String[] args) {
+	Node node = null;
 	try {
 	    System.out.println("Arguments:" + Arrays.toString(args));
 	    if (args.length != 2) {
@@ -25,17 +26,20 @@ public class Startup {
 	    Map<Integer, NodeDefinition> nodes = readNodeDefinitionsFromFile(args[0]);
 	    NodeDefinition nodeDefinition = askForNodeToWorkWith(nodes);
 	    System.out.println("I am: " + nodeDefinition);
-	    final Node node = new Node(nodeDefinition);
+	    node = new Node(nodeDefinition);
 	    List<NodeDefinition> neighbours = loadOwnNeighboursFromFile(nodeDefinition.getId(), nodes, args[1]);
-	    System.out.println("Neightbours: " + neighbours);
+	    System.out.println("Neighbours: " + neighbours);
 	    node.startServerAsThread();
 	    node.connectToOtherNodes(neighbours);
 	    node.broadcastMessage();
-	    Thread.sleep(10000);
-	    node.closeAllConnections();
+	    MainMenu mainMenu = new MainMenu(node);
+	    mainMenu.start();
 	} catch (Exception e) {
 	    System.out.print("Whoops! It didn't work!\n");
 	    e.printStackTrace();
+	} finally {
+	    if (node != null)
+		node.closeAllConnections();
 	}
     }
 
