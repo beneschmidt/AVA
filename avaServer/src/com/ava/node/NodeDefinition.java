@@ -1,4 +1,4 @@
-package com.ava.ueb01;
+package com.ava.node;
 
 import java.util.LinkedList;
 import java.util.List;

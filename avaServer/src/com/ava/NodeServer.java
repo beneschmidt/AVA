@@ -2,7 +2,7 @@ package com.ava;
 
 import java.util.List;
 
-import com.ava.ueb01.NodeDefinition;
+import com.ava.node.NodeDefinition;
 
 public interface NodeServer {
 

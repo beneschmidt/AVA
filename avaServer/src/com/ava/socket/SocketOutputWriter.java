@@ -1,4 +1,4 @@
-package com.ava.client;
+package com.ava.socket;
 
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;

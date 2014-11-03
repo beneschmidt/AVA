@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.ava.ueb01.NodeDefinition;
+import com.ava.node.NodeDefinition;
 
 /**
  * represents a complete node graph with all combinations based on a graph file

@@ -1,4 +1,4 @@
-package com.ava.client;
+package com.ava.node;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -6,7 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.ava.NodeServer;
-import com.ava.ueb01.NodeDefinition;
+import com.ava.socket.SocketInputReader;
+import com.ava.socket.SocketOutputWriter;
 import com.ava.utils.ResourceHelper;
 
 public class Node implements NodeServer {

@@ -1,4 +1,4 @@
-package com.ava.client;
+package com.ava.socket;
 
 import java.io.BufferedReader;
 import java.io.IOException;

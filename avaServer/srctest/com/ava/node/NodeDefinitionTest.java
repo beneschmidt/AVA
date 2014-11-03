@@ -1,8 +1,10 @@
-package com.ava.ueb01;
+package com.ava.node;
 
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+
+import com.ava.node.NodeDefinition;
 
 public class NodeDefinitionTest {
 
