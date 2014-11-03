@@ -31,9 +31,9 @@ public class Startup {
 	    System.out.println("Neighbours: " + neighbours);
 	    node.startServerAsThread();
 	    node.connectToOtherNodes(neighbours);
-	    node.broadcastMessage();
+	    node.broadcastMessage("hey I'm "+node.getNodeDefinition());
 	    MainMenu mainMenu = new MainMenu(node);
-	    mainMenu.start();
+	    mainMenu.run();
 	} catch (Exception e) {
 	    System.out.print("Whoops! It didn't work!\n");
 	    e.printStackTrace();

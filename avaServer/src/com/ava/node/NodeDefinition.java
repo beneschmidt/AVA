@@ -10,9 +10,9 @@ import java.util.regex.Pattern;
  * 
  * @author D063416
  */
-public class NodeDefinition {
+public class NodeDefinition implements Comparable<NodeDefinition>{
 
-    private final int id;
+    private final Integer id;
     private final String ip;
     private final int port;
 
@@ -41,7 +41,7 @@ public class NodeDefinition {
 	}
     }
 
-    public int getId() {
+    public Integer getId() {
 	return id;
     }
 
@@ -56,5 +56,11 @@ public class NodeDefinition {
     @Override
     public String toString() {
 	return "NodeDefinition [id=" + id + ", ip=" + ip + ", port=" + port + "]";
+    }
+
+    @Override
+    public int compareTo(NodeDefinition o) {
+	// TODO Auto-generated method stub
+	return getId().compareTo(o.getId());
     }
 }

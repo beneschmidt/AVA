@@ -12,5 +12,5 @@ public interface NodeServer {
 
     void connectToOtherNodes(List<NodeDefinition> othersNodes);
 
-    void broadcastMessage();
+    void broadcastMessage(String message);
 }

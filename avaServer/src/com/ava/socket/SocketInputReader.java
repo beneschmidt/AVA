@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
-import com.ava.utils.ResourceHelper;
 import com.ava.utils.TimeUtils;
 
 /**
@@ -37,8 +36,6 @@ public class SocketInputReader extends Thread {
 	    }
 	} catch (IOException e) {
 	    e.printStackTrace();
-	} finally {
-	    ResourceHelper.close(socket);
 	}
     }
 }

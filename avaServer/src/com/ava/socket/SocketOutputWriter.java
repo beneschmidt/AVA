@@ -4,7 +4,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 
-import com.ava.utils.ResourceHelper;
 import com.ava.utils.TimeUtils;
 
 public class SocketOutputWriter {
@@ -14,12 +13,11 @@ public class SocketOutputWriter {
 	try {
 	    OutputStream out = socket.getOutputStream();
 	    writer = new OutputStreamWriter(out);
-	    writer.write(message);
-	    System.out.println("[OUT] "+TimeUtils.getCurrentTimestampString() + ": " + message);
+	    writer.write(message + "\n");
+	    writer.flush();
+	    System.out.println("\n[OUT] " + TimeUtils.getCurrentTimestampString() + ": " + message);
 	} catch (Exception e) {
-	    System.err.println("Verbindung fehlgeschlagen!");
-	} finally {
-	    ResourceHelper.close(writer);
+	    System.err.println("Verbindung fehlgeschlagen!" + e.getMessage());
 	}
     }
 }

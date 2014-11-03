@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import com.ava.NodeServer;
 import com.ava.socket.SocketInputReader;
@@ -15,12 +16,12 @@ import com.ava.utils.ResourceHelper;
 public class Node implements NodeServer {
 
     private final NodeDefinition nodeDefinition;
-    private List<Socket> connectedSockets;
+    private Map<NodeDefinition, Socket> connectedSockets;
     private ServerSocket serverSocket;
 
     public Node(NodeDefinition nodeDefinition) {
 	this.nodeDefinition = nodeDefinition;
-	this.connectedSockets = new LinkedList<Socket>();
+	this.connectedSockets = new TreeMap<>();
     }
 
     public NodeDefinition getNodeDefinition() {
@@ -37,8 +38,13 @@ public class Node implements NodeServer {
 			connectionToNode(nextDef, connectionTries);
 			connected = true;
 		    } catch (Exception e) {
-			System.err.println("Verbindung mit port " + nextDef.getPort() + " fehlgeschlagen!");
+			System.err.println("Verbindung mit port " + nextDef.getPort() + " fehlgeschlagen!"+e.getMessage());
 			connectionTries++;
+			try {
+			    Thread.sleep(1000);
+			} catch (InterruptedException e1) {
+			    e1.printStackTrace();
+			}
 		    }
 		}
 	    }
@@ -47,16 +53,26 @@ public class Node implements NodeServer {
 
     private void connectionToNode(NodeDefinition nextDef, int connectionTries) throws UnknownHostException, IOException {
 	Socket socket = new Socket(nextDef.getIp(), nextDef.getPort());
-	connectedSockets.add(socket);
+	connectedSockets.put(nextDef, socket);
 	System.out.println("Verbindung hergestellt: " + nextDef);
     }
 
     @Override
-    public void broadcastMessage() {
+    public void broadcastMessage(String message) {
 	SocketOutputWriter writer = new SocketOutputWriter();
-	for (Socket nextSocket : connectedSockets) {
-	    writer.writeMessage(nextSocket, "Hey, I'm " + nodeDefinition);
+	for (Socket nextSocket : connectedSockets.values()) {
+	    writer.writeMessage(nextSocket, message);
 	}
+    }
+
+    public void message(NodeDefinition nodeToSendMessage, String message) {
+	Socket socket = connectedSockets.get(nodeToSendMessage);
+	SocketOutputWriter writer = new SocketOutputWriter();
+	writer.writeMessage(socket, message);
+    }
+
+    public Map<NodeDefinition, Socket> getConnectedSockets() {
+	return connectedSockets;
     }
 
     @Override
@@ -91,8 +107,8 @@ public class Node implements NodeServer {
     public void closeAllConnections() {
 	try {
 	    SocketOutputWriter writer = new SocketOutputWriter();
-	    for (Socket socket : connectedSockets) {
-		writer.writeMessage(socket, nodeDefinition+" goes offline");
+	    for (Socket socket : connectedSockets.values()) {
+		writer.writeMessage(socket, nodeDefinition + " goes offline");
 		ResourceHelper.close(socket);
 	    }
 	    System.out.println("All connections closed");

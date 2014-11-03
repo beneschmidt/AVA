@@ -6,15 +6,20 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.ava.node.Node;
+import com.ava.node.NodeDefinition;
 
 public class MainMenu implements Menu {
+    private static final int SEND_BROADCAST_MESSAGE = 4;
+    private static final int SEND_SINGLE_MESSAGE = 3;
+    private static final int CLOSE_CON_EXIT = 2;
+    private static final int CLOSE_CON = 1;
     private static Map<Integer, String> selections;
     static {
 	selections = new TreeMap<>();
-	selections.put(1, "close connections to other sockets");
-	selections.put(2, "close connections and exit");
-	selections.put(3, "send a message to a socket");
-	selections.put(4, "send a message to all sockets");
+	selections.put(CLOSE_CON, "close connections to other sockets");
+	selections.put(CLOSE_CON_EXIT, "close connections and exit");
+	selections.put(SEND_SINGLE_MESSAGE, "send a message to a socket");
+	selections.put(SEND_BROADCAST_MESSAGE, "send a message to all sockets");
     }
 
     private Node node;
@@ -24,30 +29,41 @@ public class MainMenu implements Menu {
     }
 
     @Override
-    public String toString() {
-	StringBuilder menu = new StringBuilder().append("What do you want to do?\n");
-	for (Map.Entry<Integer, String> entries : selections.entrySet()) {
-	    menu.append(entries.getKey()).append(") ").append(entries.getValue()).append("\n");
+    public Object run() {
+	while (true) {
+	    System.out.println(toString());
+	    Object o = readInput();
+	    handleInput(o);
 	}
-	return menu.toString();
     }
 
-    @Override
-    public void handleInput(Object o) {
+    private void handleInput(Object o) {
 	try {
 	    Integer idToHandle = Integer.valueOf(o.toString());
 	    switch (idToHandle) {
-	    case 1:
+	    case CLOSE_CON: {
 		node.closeAllConnections();
 		break;
-	    case 2:
+	    }
+	    case CLOSE_CON_EXIT: {
 		node.closeAllConnections();
 		node.closeServer();
 		System.exit(0);
-	    case 3:
+	    }
+	    case SEND_SINGLE_MESSAGE: {
+		NodeSelectionMenu menu = new NodeSelectionMenu(node);
+		NodeDefinition nodeToMessageTo = (NodeDefinition) menu.run();
+		MessageMenu messageMenu = new MessageMenu();
+		String message = (String) messageMenu.run();
+		node.message(nodeToMessageTo, message);
 		break;
-	    case 4:
+	    }
+	    case SEND_BROADCAST_MESSAGE: {
+		MessageMenu messageMenu = new MessageMenu();
+		String message = (String) messageMenu.run();
+		node.broadcastMessage(message);
 		break;
+	    }
 	    default:
 		System.out.println("wat?");
 		break;
@@ -58,20 +74,11 @@ public class MainMenu implements Menu {
 
     }
 
-    @Override
-    public void start() {
-	while (true) {
-	    System.out.println(toString());
-	    Object o = readInput();
-	    handleInput(o);
-	}
-    }
-
     private Integer readInput() {
 	boolean keepOnReading = true;
 	while (keepOnReading) {
 	    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-	    System.out.print("Enter selection:");
+	    System.out.println("Enter selection:");
 	    try {
 		String inputLine = br.readLine();
 		Integer id = Integer.parseInt(inputLine);
@@ -85,5 +92,14 @@ public class MainMenu implements Menu {
 	    }
 	}
 	return 0;
+    }
+
+    @Override
+    public String toString() {
+	StringBuilder menu = new StringBuilder().append("What do you want to do?\n");
+	for (Map.Entry<Integer, String> entries : selections.entrySet()) {
+	    menu.append(entries.getKey()).append(") ").append(entries.getValue()).append("\n");
+	}
+	return menu.toString();
     }
 }
