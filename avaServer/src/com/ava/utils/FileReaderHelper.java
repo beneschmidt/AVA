@@ -13,36 +13,36 @@ import java.util.List;
  */
 public class FileReaderHelper {
 
-    private final String filename;
+	private final String filename;
 
-    public FileReaderHelper(String filename) {
-	this.filename = filename;
-    }
-
-    public List<String> readFileAsRows() {
-	List<String> lines = new LinkedList<String>();
-	BufferedReader br = null;
-	try {
-	    FileReader fileReader = new FileReader(filename);
-	    br = new BufferedReader(fileReader);
-	    String line = "";
-	    while ((line = br.readLine()) != null) {
-		lines.add(line);
-	    }
-	} catch (IOException e) {
-	    e.printStackTrace();
-	} finally {
-	    ResourceHelper.close(br);
+	public FileReaderHelper(String filename) {
+		this.filename = filename;
 	}
-	return lines;
-    }
 
-    public String readFileAsOneString() {
-	StringBuilder oneString = new StringBuilder();
-	List<String> rows = readFileAsRows();
-	for (String nextRow : rows) {
-	    oneString.append(nextRow).append("\n");
+	public List<String> readFileAsRows() {
+		List<String> lines = new LinkedList<String>();
+		BufferedReader br = null;
+		try {
+			FileReader fileReader = new FileReader(filename);
+			br = new BufferedReader(fileReader);
+			String line = "";
+			while ((line = br.readLine()) != null) {
+				lines.add(line);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			ResourceHelper.close(br);
+		}
+		return lines;
 	}
-	return oneString.toString();
-    }
+
+	public String readFileAsOneString() {
+		StringBuilder oneString = new StringBuilder();
+		List<String> rows = readFileAsRows();
+		for (String nextRow : rows) {
+			oneString.append(nextRow).append("\n");
+		}
+		return oneString.toString();
+	}
 }
