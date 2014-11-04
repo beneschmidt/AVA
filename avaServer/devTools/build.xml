@@ -30,6 +30,7 @@
 		<antcall target="package" />
 		<antcall target="package.graphcreator" />
 		<antcall target="copy.setup" />
+		<antcall target="copy.to.desktop" />
 	</target>
 
 	<!-- Anlegen der vorausgesetzten Grundstruktur -->
@@ -169,6 +170,18 @@
 		</copy>
 		<copy todir="${setup}/lib">
 			<fileset dir="${lib}" />
+		</copy>
+	</target>
+
+	<target name="copy.to.desktop" depends="init">
+		<echo>processing new setup folder=${desktopsetup}</echo>
+		<!-- Setup-Ordner erstellen -->
+		<delete dir="${desktopsetup}" failonerror="true" />
+		<mkdir dir="${desktopsetup}" />
+
+		<!-- everything -->
+		<copy todir="${desktopsetup}">
+			<fileset dir="${setup}" />
 		</copy>
 	</target>
 

@@ -75,7 +75,7 @@ public class SocketInputReader extends Thread {
 		} else if (message.getMessage().equals(EXIT_OTHERS)) {
 			node.sendMessage(nextTargets, message);
 		} else if (message.getMessage().startsWith(RUMOR)) {
-			int rumorCount = Rumors.getInstance().addRumor(message.getMessage());
+			int rumorCount = Rumors.getInstance().addRumor(node.getNodeDefinition(), message.getMessage());
 			if (rumorCount < 5) {
 				node.sendMessage(nextTargets, message);
 			} else {

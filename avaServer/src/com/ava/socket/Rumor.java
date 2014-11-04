@@ -1,18 +1,27 @@
 package com.ava.socket;
 
+import java.util.Set;
+import java.util.TreeSet;
+
+import com.ava.node.NodeDefinition;
+
+/**
+ * a rumor, that is spreading around. It has a message and knows about all nodes that have heard of it
+ * @author Benedikt Schmidt
+ */
 public class Rumor implements Comparable<Rumor> {
 
 	private String message;
-	private int receiveCount;
+	private Set<NodeDefinition> nodes;
 
 	public Rumor(String message) {
-		receiveCount = 1;
+		nodes = new TreeSet<NodeDefinition>();
 		this.message = message;
 	}
 
-	public int iHeardThatToo() {
-		receiveCount++;
-		return receiveCount;
+	public int iHeardThatToo(NodeDefinition node) {
+		nodes.add(node);
+		return getReceiveCount();
 	}
 
 	public String getMessage() {
@@ -24,12 +33,12 @@ public class Rumor implements Comparable<Rumor> {
 	}
 
 	public int getReceiveCount() {
-		return receiveCount;
+		return nodes.size();
 	}
 
 	@Override
 	public String toString() {
-		return "Rumors [message=" + message + ", receiveCount=" + receiveCount + "]";
+		return "Rumor [message=" + message + ", nodes=" + nodes + "]";
 	}
 
 	@Override

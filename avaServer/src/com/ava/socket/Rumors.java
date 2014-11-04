@@ -3,6 +3,8 @@ package com.ava.socket;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.ava.node.NodeDefinition;
+
 /**
  * Singleton to administrate all rumors that are around
  * @author D063416
@@ -26,16 +28,16 @@ public class Rumors {
 	}
 
 	/**
-	F	 * @param message
+	 * @param message
 	 * @return receive count
 	 */
-	public int addRumor(String message) {
+	public int addRumor(NodeDefinition node, String message) {
 		if (rumorList.get(message) == null) {
 			Rumor rumor = new Rumor(message);
 			rumorList.put(message, rumor);
 			return rumor.getReceiveCount();
 		} else {
-			int count = rumorList.get(message).iHeardThatToo();
+			int count = rumorList.get(message).iHeardThatToo(node);
 			return count;
 		}
 	}
