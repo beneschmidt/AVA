@@ -13,29 +13,25 @@ import com.ava.utils.TimeUtils;
  * @author Benne
  */
 public class SocketInputReader extends Thread {
-    private static final String EXIT = "E";
-    private Socket socket;
+	private Socket socket;
 
-    public SocketInputReader(Socket socket) {
-	this.socket = socket;
-    }
-
-    @Override
-    public void run() {
-	try {
-	    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-	    String inputLine = "";
-	    while ((inputLine = in.readLine()) != null) {
-		String currentTime = TimeUtils.getCurrentTimestampString();
-		System.out.println("[IN] " + currentTime + ": " + inputLine);
-		if (inputLine.equals(EXIT)) {
-		    System.out.println("Connection will be closed");
-		    break;
-		}
-	    }
-	} catch (IOException e) {
-	    e.printStackTrace();
+	public SocketInputReader(Socket socket) {
+		this.socket = socket;
 	}
-    }
+
+	@Override
+	public void run() {
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+			String inputLine = "";
+			while ((inputLine = in.readLine()) != null) {
+				String currentTime = TimeUtils.getCurrentTimestampString();
+				SocketMessage message = SocketMessage.fromJson(inputLine);
+				System.out.println("[IN] " + currentTime + ": " + message.getMessage());
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
