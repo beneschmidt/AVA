@@ -5,14 +5,16 @@ import com.google.gson.Gson;
 
 public class SocketMessage {
 
-	public static final int SYSTEM = 1;
-	public static final int USER = 2;
+	public enum SocketMessageSource {
+		system, user;
+	}
 
-	public static final int NO_FORWARDING = 1;
-	public static final int BROADCAST_FORWARDING = 2;
+	public enum SocketMessageForwardingType {
+		none, broadcast, broadcast_without_sender;
+	}
 
-	private int type;
-	private int forwardingType;
+	private SocketMessageSource source;
+	private SocketMessageForwardingType forwardingType;
 	private NodeDefinition node;
 	private String message;
 
@@ -24,18 +26,19 @@ public class SocketMessage {
 	public SocketMessage() {
 	}
 
-	SocketMessage(int type, NodeDefinition node, String message) {
-		this.type = type;
+	SocketMessage(SocketMessageSource source, SocketMessageForwardingType forwardingType, NodeDefinition node, String message) {
+		this.source = source;
 		this.node = node;
 		this.message = message;
+		this.forwardingType = forwardingType;
 	}
 
-	public int getType() {
-		return type;
+	public SocketMessageSource getSource() {
+		return source;
 	}
 
-	public void setType(int type) {
-		this.type = type;
+	public void setSource(SocketMessageSource source) {
+		this.source = source;
 	}
 
 	public NodeDefinition getNode() {
@@ -54,11 +57,11 @@ public class SocketMessage {
 		this.message = message;
 	}
 
-	public int getForwardingType() {
+	public SocketMessageForwardingType getForwardingType() {
 		return forwardingType;
 	}
 
-	public void setForwardingType(int forwardingType) {
+	public void setForwardingType(SocketMessageForwardingType forwardingType) {
 		this.forwardingType = forwardingType;
 	}
 
@@ -69,7 +72,7 @@ public class SocketMessage {
 
 	@Override
 	public String toString() {
-		return "SocketMessage [type=" + type + ", forwardingType=" + forwardingType + ", node=" + node + ", message=" + message + "]";
+		return "SocketMessage [source=" + source + ", forwardingType=" + forwardingType + ", node=" + node + ", message=" + message + "]";
 	}
 
 }

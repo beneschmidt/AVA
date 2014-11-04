@@ -61,12 +61,17 @@ public class Node implements NodeServer {
 
 	@Override
 	public void broadcastMessage(SocketMessage message) {
+		this.sendMessage(connectedSockets, message);
+	}
+
+	public void sendMessage(Map<NodeDefinition, Socket> sockets, SocketMessage message) {
 		SocketOutputWriter writer = new SocketOutputWriter();
-		for (Socket nextSocket : connectedSockets.values()) {
+		for (Socket nextSocket : sockets.values()) {
 			writer.writeMessage(nextSocket, message);
 		}
 	}
 
+	@Override
 	public void sendMessage(NodeDefinition nodeToSendMessage, SocketMessage message) {
 		Socket socket = connectedSockets.get(nodeToSendMessage);
 		SocketOutputWriter writer = new SocketOutputWriter();

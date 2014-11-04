@@ -7,10 +7,14 @@ import java.util.TreeMap;
 
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
+import com.ava.socket.SocketInputReader;
 import com.ava.socket.SocketMessage;
+import com.ava.socket.SocketMessage.SocketMessageForwardingType;
 import com.ava.socket.SocketMessageFactory;
 
 public class MainMenu implements Menu {
+	private static final int SPREAD_RUMOR = 6;
+	private static final int CLOSE_ALL_SOCKETS = 5;
 	private static final int SEND_BROADCAST_MESSAGE = 4;
 	private static final int SEND_SINGLE_MESSAGE = 3;
 	private static final int CLOSE_CON_EXIT = 2;
@@ -22,6 +26,8 @@ public class MainMenu implements Menu {
 		selections.put(CLOSE_CON_EXIT, "close connections and exit");
 		selections.put(SEND_SINGLE_MESSAGE, "send a message to a socket");
 		selections.put(SEND_BROADCAST_MESSAGE, "send a message to all sockets");
+		selections.put(CLOSE_ALL_SOCKETS, "close all sockets");
+		selections.put(SPREAD_RUMOR, "spread a rumor");
 	}
 
 	private Node node;
@@ -65,6 +71,22 @@ public class MainMenu implements Menu {
 					MessageMenu messageMenu = new MessageMenu();
 					String message = (String) messageMenu.run();
 					SocketMessage socketMessage = SocketMessageFactory.createUserMessage(node.getNodeDefinition(), message);
+					node.broadcastMessage(socketMessage);
+					break;
+				}
+				case CLOSE_ALL_SOCKETS: {
+					String message = SocketInputReader.EXIT;
+					SocketMessage socketMessage = SocketMessageFactory.createForwardingUserMessage(SocketMessageForwardingType.broadcast,
+							node.getNodeDefinition(), message);
+					node.broadcastMessage(socketMessage);
+					node.closeServer();
+				}
+				case SPREAD_RUMOR: {
+					MessageMenu messageMenu = new MessageMenu();
+					String message = (String) messageMenu.run();
+					String realMessage = SocketInputReader.RUMOR + message;
+					SocketMessage socketMessage = SocketMessageFactory.createForwardingUserMessage(SocketMessageForwardingType.broadcast_without_sender,
+							node.getNodeDefinition(), realMessage);
 					node.broadcastMessage(socketMessage);
 					break;
 				}
