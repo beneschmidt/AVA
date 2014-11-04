@@ -13,7 +13,7 @@
 		</fileset>
 	</path>
 
-	<!-- die libraries f�r die Test-Dateien laden -->
+	<!-- die libraries fuer die Test-Dateien laden -->
 	<path id="test-classpath">
 		<!-- die oben referenzierten Libraries k�nnen auch hier wieder verwendet werden -->
 		<path refid="libraries" />
@@ -73,6 +73,10 @@
 		<!-- Pfad f�r den Speicherort der Jar erstellen -->
 		<mkdir dir="${dist}" />
 
+		<manifestclasspath property="lib.list" jarfile="${dist}/${graphjarname}">
+			<classpath refid="libraries" />
+		</manifestclasspath>
+
 		<!-- .class-Dateien in JAR verpacken -->
 		<jar destfile="${dist}/${jarname}">
 			<fileset dir="${classes}" />
@@ -83,6 +87,7 @@
 				<attribute name="Main-Class" value="${mainclass}" />
 				<attribute name="Built-By" value="${user.name}" />
 				<attribute name="Built-Time" value="${time}" />
+				<attribute name="Class-Path" value="lib/gson-2.2.4.jar" />
 			</manifest>
 		</jar>
 
@@ -161,6 +166,9 @@
 		<copy tofile="${setup}/${graphjarname}" file="${dist}/${graphjarname}" />
 		<copy todir="${setup}">
 			<fileset dir="${resources}" />
+		</copy>
+		<copy todir="${setup}/lib">
+			<fileset dir="${lib}" />
 		</copy>
 	</target>
 

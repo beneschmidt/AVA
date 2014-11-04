@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
+import com.ava.node.Node;
 import com.ava.utils.TimeUtils;
 
 /**
@@ -13,10 +14,14 @@ import com.ava.utils.TimeUtils;
  * @author Benne
  */
 public class SocketInputReader extends Thread {
+	private static final String EXIT = "EXIT";
+	
 	private Socket socket;
+	private Node node;
 
-	public SocketInputReader(Socket socket) {
+	public SocketInputReader(Node node, Socket socket) {
 		this.socket = socket;
+		this.node = node;
 	}
 
 	@Override
@@ -29,9 +34,17 @@ public class SocketInputReader extends Thread {
 				String currentTime = TimeUtils.getCurrentTimestampString();
 				SocketMessage message = SocketMessage.fromJson(inputLine);
 				System.out.println("[IN] " + currentTime + ": " + message.getMessage());
+				
+				handleMessage(message);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+
+	private void handleMessage(SocketMessage message) {
+		if(message.getMessage().equals(EXIT)){
+			node.closeServer();
 		}
 	}
 }

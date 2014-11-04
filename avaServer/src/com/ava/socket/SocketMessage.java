@@ -4,11 +4,15 @@ import com.ava.node.NodeDefinition;
 import com.google.gson.Gson;
 
 public class SocketMessage {
-	
+
 	public static final int SYSTEM = 1;
 	public static final int USER = 2;
 
+	public static final int NO_FORWARDING = 1;
+	public static final int BROADCAST_FORWARDING = 2;
+
 	private int type;
+	private int forwardingType;
 	private NodeDefinition node;
 	private String message;
 
@@ -50,6 +54,14 @@ public class SocketMessage {
 		this.message = message;
 	}
 
+	public int getForwardingType() {
+		return forwardingType;
+	}
+
+	public void setForwardingType(int forwardingType) {
+		this.forwardingType = forwardingType;
+	}
+
 	public String asJson() {
 		String json = new Gson().toJson(this);
 		return json;
@@ -57,7 +69,7 @@ public class SocketMessage {
 
 	@Override
 	public String toString() {
-		return "SocketMessage [type=" + type + ", node=" + node + ", message=" + message + "]";
+		return "SocketMessage [type=" + type + ", forwardingType=" + forwardingType + ", node=" + node + ", message=" + message + "]";
 	}
 
 }

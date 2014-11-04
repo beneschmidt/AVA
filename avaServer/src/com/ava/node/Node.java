@@ -87,12 +87,11 @@ public class Node implements NodeServer {
 
 					while (true) {
 						final Socket clientSocket = serverSocket.accept();
-						Thread thread = new SocketInputReader(clientSocket);
+						Thread thread = new SocketInputReader(Node.this, clientSocket);
 						thread.start();
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
-					System.out.print("Whoops! It didn't work!\n");
+					System.out.print(e.getMessage());
 				}
 			}
 		}).start();
