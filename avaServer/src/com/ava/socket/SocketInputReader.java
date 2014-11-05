@@ -37,9 +37,9 @@ public class SocketInputReader extends Thread {
 
 			String inputLine = "";
 			while ((inputLine = in.readLine()) != null) {
-				String currentTime = TimeUtils.getCurrentTimestampString();
+				String currentTime = TimeUtils.getCurrentTimeString();
 				SocketMessage message = SocketMessage.fromJson(inputLine);
-				System.out.println("[IN] " + currentTime + ": " + message.getMessage());
+				System.out.println("[IN] " + currentTime + ": " + message.getNode().getPort() + "=" + message.getMessage());
 
 				handleMessage(message);
 			}
@@ -64,6 +64,35 @@ public class SocketInputReader extends Thread {
 						nextTargets.put(nextEntry.getKey(), nextEntry.getValue());
 					}
 				}
+				break;
+			}
+			case broadcast_to_two: {
+				int i = 0;
+				for (Map.Entry<NodeDefinition, Socket> nextEntry : node.getConnectedSockets().entrySet()) {
+					if (!nextEntry.getKey().equals(message.getNode())) {
+						nextTargets.put(nextEntry.getKey(), nextEntry.getValue());
+						if (i >= 1) {
+							break;
+						} else {
+							i++;
+						}
+					}
+				}
+				break;
+			}
+			case broadcast_to_all_but_two: {
+				int i = node.getConnectedSockets().size();
+				for (Map.Entry<NodeDefinition, Socket> nextEntry : node.getConnectedSockets().entrySet()) {
+					if (!nextEntry.getKey().equals(message.getNode())) {
+						nextTargets.put(nextEntry.getKey(), nextEntry.getValue());
+						if (i <= 1) {
+							break;
+						} else {
+							i--;
+						}
+					}
+				}
+				break;
 			}
 			default: {
 				break;
@@ -75,8 +104,10 @@ public class SocketInputReader extends Thread {
 		} else if (message.getMessage().equals(EXIT_OTHERS)) {
 			node.sendMessage(nextTargets, message);
 		} else if (message.getMessage().startsWith(RUMOR)) {
-			int rumorCount = Rumors.getInstance().addRumor(node.getNodeDefinition(), message.getMessage());
-			if (rumorCount < 5) {
+			int rumorCount = Rumors.getInstance().addRumor(message.getNode(), message.getMessage());
+			if (rumorCount < 3) {
+				System.out.println(rumorCount + ", I don't believe it yet..." + Rumors.getInstance().getRumor(message.getMessage()));
+				message.setNode(node.getNodeDefinition());
 				node.sendMessage(nextTargets, message);
 			} else {
 				System.out.println("the rumors are true, " + message.getMessage());

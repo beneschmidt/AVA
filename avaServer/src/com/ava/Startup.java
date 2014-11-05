@@ -21,12 +21,17 @@ public class Startup {
 		Node node = null;
 		try {
 			System.out.println("Arguments:" + Arrays.toString(args));
-			if (args.length != 2) {
-				System.out.println("usage: java -jar {jarname} {node definition file} {graph file}");
+			if (args.length < 2) {
+				System.out.println("usage: java -jar {jarname} {node definition file} {graph file} {optional: node-id}");
 				System.exit(0);
 			}
 			Map<Integer, NodeDefinition> nodes = readNodeDefinitionsFromFile(args[0]);
-			NodeDefinition nodeDefinition = askForNodeToWorkWith(nodes);
+			NodeDefinition nodeDefinition = null;
+			if (args.length == 2) {
+				nodeDefinition = askForNodeToWorkWith(nodes);
+			} else {
+				nodeDefinition = nodes.get(Integer.parseInt(args[2]));
+			}
 			System.out.println("I am: " + nodeDefinition);
 			node = new Node(nodeDefinition);
 			List<NodeDefinition> neighbours = loadOwnNeighboursFromFile(nodeDefinition.getId(), nodes, args[1]);

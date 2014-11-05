@@ -33,12 +33,19 @@ public class Rumors {
 	 */
 	public int addRumor(NodeDefinition node, String message) {
 		if (rumorList.get(message) == null) {
+			System.out.println("new rumor: "+message);
 			Rumor rumor = new Rumor(message);
+			rumor.iHeardThatToo(node);
 			rumorList.put(message, rumor);
 			return rumor.getReceiveCount();
 		} else {
+			System.out.println("heardfrom: "+node);
 			int count = rumorList.get(message).iHeardThatToo(node);
 			return count;
 		}
+	}
+	
+	public Rumor getRumor(String message){
+		return rumorList.get(message);
 	}
 }

@@ -10,7 +10,7 @@ public class SocketMessage {
 	}
 
 	public enum SocketMessageForwardingType {
-		none, broadcast, broadcast_without_sender;
+		none, broadcast, broadcast_without_sender, broadcast_to_two, broadcast_to_all_but_two;
 	}
 
 	private SocketMessageSource source;
