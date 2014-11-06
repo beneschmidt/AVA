@@ -48,7 +48,32 @@ public class SocketInputReader extends Thread {
 		}
 	}
 
+	/**
+	 * input message handling
+	 * @param message
+	 */
 	private void handleMessage(SocketMessage message) {
+		Map<NodeDefinition, Socket> nextTargets = pickNextTargets(message);
+		if (message.getMessage().equals(EXIT)) {
+			node.closeServer();
+		} else if (message.getMessage().equals(EXIT_OTHERS)) {
+			node.sendMessage(nextTargets, message);
+			node.closeServer();
+		} else if (message.getMessage().startsWith(RUMOR)) {
+			int rumorCount = Rumors.getInstance().addRumor(message.getNode(), message.getMessage());
+			if (rumorCount < 3) {
+				System.out.println(rumorCount + ", I don't believe it yet..." + Rumors.getInstance().getRumor(message.getMessage()));
+				message.setNode(node.getNodeDefinition());
+				node.sendMessage(nextTargets, message);
+			} else {
+				System.out.println("the rumors are true, " + message.getMessage());
+			}
+		} else {
+			node.sendMessage(nextTargets, message);
+		}
+	}
+
+	private Map<NodeDefinition, Socket> pickNextTargets(SocketMessage message) {
 		Map<NodeDefinition, Socket> nextTargets = new TreeMap<NodeDefinition, Socket>();
 		switch (message.getForwardingType()) {
 			case none: {
@@ -67,51 +92,42 @@ public class SocketInputReader extends Thread {
 				break;
 			}
 			case broadcast_to_two: {
-				int i = 0;
-				for (Map.Entry<NodeDefinition, Socket> nextEntry : node.getConnectedSockets().entrySet()) {
-					if (!nextEntry.getKey().equals(message.getNode())) {
-						nextTargets.put(nextEntry.getKey(), nextEntry.getValue());
-						if (i >= 1) {
-							break;
-						} else {
-							i++;
-						}
-					}
-				}
+				nextTargets = pickNodesFromNodeList(message, 2);
 				break;
 			}
 			case broadcast_to_all_but_two: {
+				
+				// exlude the last two nodes
 				int i = node.getConnectedSockets().size();
-				for (Map.Entry<NodeDefinition, Socket> nextEntry : node.getConnectedSockets().entrySet()) {
-					if (!nextEntry.getKey().equals(message.getNode())) {
-						nextTargets.put(nextEntry.getKey(), nextEntry.getValue());
-						if (i <= 1) {
-							break;
-						} else {
-							i--;
-						}
-					}
-				}
+				int numberOfNodes = i-2;
+				nextTargets = pickNodesFromNodeList(message, numberOfNodes);
+				break;
+			}
+			case broadcast_to_half: {
+				int max = (node.getConnectedSockets().size() - 1) / 2;
+				nextTargets = pickNodesFromNodeList(message, max);
 				break;
 			}
 			default: {
 				break;
 			}
 		}
-		if (message.getMessage().equals(EXIT)) {
-			node.sendMessage(nextTargets, message);
-			node.closeServer();
-		} else if (message.getMessage().equals(EXIT_OTHERS)) {
-			node.sendMessage(nextTargets, message);
-		} else if (message.getMessage().startsWith(RUMOR)) {
-			int rumorCount = Rumors.getInstance().addRumor(message.getNode(), message.getMessage());
-			if (rumorCount < 3) {
-				System.out.println(rumorCount + ", I don't believe it yet..." + Rumors.getInstance().getRumor(message.getMessage()));
-				message.setNode(node.getNodeDefinition());
-				node.sendMessage(nextTargets, message);
-			} else {
-				System.out.println("the rumors are true, " + message.getMessage());
+		return nextTargets;
+	}
+
+	private Map<NodeDefinition, Socket> pickNodesFromNodeList(SocketMessage message, int numberOfNodes) {
+		Map<NodeDefinition, Socket> nextTargets = new TreeMap<NodeDefinition, Socket>();
+		int i = 0;
+		for (Map.Entry<NodeDefinition, Socket> nextEntry : node.getConnectedSockets().entrySet()) {
+			if (!nextEntry.getKey().equals(message.getNode())) {
+				nextTargets.put(nextEntry.getKey(), nextEntry.getValue());
+				if (i >= numberOfNodes) {
+					break;
+				} else {
+					i++;
+				}
 			}
 		}
+		return nextTargets;
 	}
 }

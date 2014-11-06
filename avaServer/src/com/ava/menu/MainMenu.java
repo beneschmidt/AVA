@@ -85,8 +85,11 @@ public class MainMenu implements Menu {
 					MessageMenu messageMenu = new MessageMenu();
 					String message = (String) messageMenu.run();
 					String realMessage = SocketInputReader.RUMOR + message;
-					SocketMessage socketMessage = SocketMessageFactory.createForwardingUserMessage(SocketMessageForwardingType.broadcast_without_sender,
-							node.getNodeDefinition(), realMessage);
+
+					ForwardingMenu forwardingMenu = new ForwardingMenu();
+					SocketMessageForwardingType type = (SocketMessageForwardingType) forwardingMenu.run();
+
+					SocketMessage socketMessage = SocketMessageFactory.createForwardingUserMessage(type, node.getNodeDefinition(), realMessage);
 					node.broadcastMessage(socketMessage);
 					break;
 				}
