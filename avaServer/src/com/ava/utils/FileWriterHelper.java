@@ -4,9 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 /**
- * Hilfeklasse zum Auslesen von Dateien
- * 
- * @author Benedikt Schmidt
+ * helper class to write files
  */
 public class FileWriterHelper {
 

@@ -6,6 +6,9 @@ import java.net.Socket;
 
 import com.ava.utils.TimeUtils;
 
+/**
+ * helper class to write messages to a given socket using its outputstream
+ */
 public class SocketOutputWriter {
 
 	public void writeMessage(Socket socket, SocketMessage socketMessage) {

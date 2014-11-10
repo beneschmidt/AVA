@@ -12,9 +12,7 @@ import com.ava.node.NodeDefinition;
 import com.ava.utils.TimeUtils;
 
 /**
- * Thread to read input from a socket
- * 
- * @author Benne
+ * Thread to read input from a socket and then handle it
  */
 public class SocketInputReader extends Thread {
 
@@ -60,12 +58,15 @@ public class SocketInputReader extends Thread {
 			node.sendMessage(nextTargets, message);
 			node.closeServer();
 		} else if (message.getMessage().startsWith(RUMOR)) {
+			// add rumor to the rumor list
 			int rumorCount = Rumors.getInstance().addRumor(message.getNode(), message.getMessage());
 			if (rumorCount < 3) {
+				// if it wasn't heard of enough nodes, send it forward to more nodes
 				System.out.println(rumorCount + ", I don't believe it yet..." + Rumors.getInstance().getRumor(message.getMessage()));
 				message.setNode(node.getNodeDefinition());
 				node.sendMessage(nextTargets, message);
 			} else {
+				// if enough nodes told the rumor, it must be true
 				System.out.println("the rumors are true, " + message.getMessage());
 			}
 		} else {
@@ -73,6 +74,11 @@ public class SocketInputReader extends Thread {
 		}
 	}
 
+	/**
+	 * pick the next node targets to send the next message to
+	 * @param message
+	 * @return all the next nodes (definition and socket)
+	 */
 	private Map<NodeDefinition, Socket> pickNextTargets(SocketMessage message) {
 		Map<NodeDefinition, Socket> nextTargets = new TreeMap<NodeDefinition, Socket>();
 		switch (message.getForwardingType()) {
@@ -96,7 +102,6 @@ public class SocketInputReader extends Thread {
 				break;
 			}
 			case broadcast_to_all_but_two: {
-				
 				// exlude the last two nodes
 				int i = node.getConnectedSockets().size();
 				int numberOfNodes = i-2;
@@ -115,7 +120,19 @@ public class SocketInputReader extends Thread {
 		return nextTargets;
 	}
 
+	/**
+	 * picks specific nodes from the node list. The number of nodes to pick is given. If the number is higher than the actual
+	 * number of nodes or equal to it, then all nodes are returned.
+	 * The algorithm runs straight through the map regarding the sorting. There is no random filtering.
+	 * @param message
+	 * @param numberOfNodes
+	 * @return nodes
+	 */
 	private Map<NodeDefinition, Socket> pickNodesFromNodeList(SocketMessage message, int numberOfNodes) {
+		if(numberOfNodes >= node.getConnectedSockets().size()){
+			return node.getConnectedSockets();
+		}
+		
 		Map<NodeDefinition, Socket> nextTargets = new TreeMap<NodeDefinition, Socket>();
 		int i = 0;
 		for (Map.Entry<NodeDefinition, Socket> nextEntry : node.getConnectedSockets().entrySet()) {

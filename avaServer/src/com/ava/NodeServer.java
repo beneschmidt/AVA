@@ -5,6 +5,9 @@ import java.util.List;
 import com.ava.node.NodeDefinition;
 import com.ava.socket.SocketMessage;
 
+/**
+ * interface to specify functions a node server has to implement
+ */
 public interface NodeServer {
 
     void startServerAsThread();

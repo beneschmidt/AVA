@@ -12,6 +12,9 @@ import com.ava.socket.SocketMessage;
 import com.ava.socket.SocketMessage.SocketMessageForwardingType;
 import com.ava.socket.SocketMessageFactory;
 
+/**
+ * main menu that is the central point of action where you can choose from all possible sub menus
+ */
 public class MainMenu implements Menu {
 	private static final int SPREAD_RUMOR = 6;
 	private static final int CLOSE_ALL_SOCKETS = 5;
@@ -19,6 +22,8 @@ public class MainMenu implements Menu {
 	private static final int SEND_SINGLE_MESSAGE = 3;
 	private static final int CLOSE_CON_EXIT = 2;
 	private static final int CLOSE_CON = 1;
+	
+	/** all possible menu selections */
 	private static Map<Integer, String> selections;
 	static {
 		selections = new TreeMap<>();

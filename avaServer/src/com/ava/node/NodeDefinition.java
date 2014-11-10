@@ -6,9 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Entspricht einer Knotendefinition mit entsprechender id, IP und einem Port
- * 
- * @author D063416
+ * node definition including an id, ip and port
  */
 public class NodeDefinition implements Comparable<NodeDefinition> {
 
@@ -16,6 +14,10 @@ public class NodeDefinition implements Comparable<NodeDefinition> {
 	private final String ip;
 	private final int port;
 
+	/**
+	 * Node definition can be created through a given string
+	 * @param stringDefinition
+	 */
 	public NodeDefinition(String stringDefinition) {
 		List<String> values = parseDefinitionByString(stringDefinition);
 		id = Integer.parseInt(values.get(0));

@@ -3,6 +3,11 @@ package com.ava.menu;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+/**
+ * 
+ * @author D063416
+ *
+ */
 public class MessageMenu implements Menu {
 
 	@Override

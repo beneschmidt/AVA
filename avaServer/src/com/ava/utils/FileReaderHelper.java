@@ -7,9 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Hilfeklasse zum Auslesen von Dateien
- * 
- * @author Benedikt Schmidt
+ * helper class to read files
  */
 public class FileReaderHelper {
 

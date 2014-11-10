@@ -15,6 +15,9 @@ import com.ava.socket.SocketMessage;
 import com.ava.socket.SocketMessageFactory;
 import com.ava.utils.FileReaderHelper;
 
+/**
+ * main start class of the whole programm
+ */
 public class Startup {
 
 	public static void main(String[] args) {

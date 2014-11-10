@@ -1,5 +1,8 @@
 package com.ava.graph;
 
+/**
+ * combination of a node and his neighbour in a graph
+ */
 public class GraphNodeCombination {
 	private final Integer key;
 	private final Integer value;

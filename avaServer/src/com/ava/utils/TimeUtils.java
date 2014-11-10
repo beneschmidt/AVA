@@ -3,6 +3,9 @@ package com.ava.utils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * helper class for time concerns
+ */
 public class TimeUtils {
 
 	public static String getCurrentTimestampString() {

@@ -6,6 +6,9 @@ import java.io.InputStreamReader;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
 
+/**
+ * menu to select a specific node
+ */
 public class NodeSelectionMenu implements Menu {
 
     private Node node;

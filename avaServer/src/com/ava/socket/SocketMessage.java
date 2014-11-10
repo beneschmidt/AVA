@@ -3,6 +3,14 @@ package com.ava.socket;
 import com.ava.node.NodeDefinition;
 import com.google.gson.Gson;
 
+/**
+ * A socket message that is transfered from one node to another. Following information is given: <br>
+ * - message source type<br>
+ * - forwarding type<br>
+ * - node that sent the message (last sender)<br>
+ * - message to deliver (string)<br>
+ * <br>
+ */
 public class SocketMessage {
 
 	public enum SocketMessageSource {
@@ -18,6 +26,11 @@ public class SocketMessage {
 	private NodeDefinition node;
 	private String message;
 
+	/**
+	 * The message can be created by parsing a json String
+	 * @param json
+	 * @return SocketMessage
+	 */
 	public static SocketMessage fromJson(String json) {
 		Gson gson = new Gson();
 		return gson.fromJson(json, SocketMessage.class);

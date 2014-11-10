@@ -28,6 +28,9 @@ public class Rumors {
 	}
 
 	/**
+	 * adds a message as a rumor to the list of rumors. If the rumor is new, it is added to the list with 
+	 * a rumor count of 1. Otherwise the given node is added to the existing rumor and the rumor count may
+	 * be incresed by one.
 	 * @param message
 	 * @return receive count
 	 */

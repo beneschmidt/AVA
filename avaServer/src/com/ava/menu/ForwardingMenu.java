@@ -7,6 +7,9 @@ import java.util.TreeMap;
 
 import com.ava.socket.SocketMessage.SocketMessageForwardingType;
 
+/**
+ * menu to select the forwarding type
+ */
 public class ForwardingMenu implements Menu {
 	private static final int BROADCAST_TO_HALF = 5;
 	private static final int BROADCAST_BUT_TWO = 4;

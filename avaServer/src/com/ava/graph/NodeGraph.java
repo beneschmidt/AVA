@@ -11,9 +11,6 @@ import com.ava.node.NodeDefinition;
 /**
  * represents a complete node graph with all combinations based on a graph file
  * content
- * 
- * @author Benne
- * 
  */
 public class NodeGraph {
 	private static final String NODE_COMBINATION_PATTERN = "(\\d{1,2}) \\-\\- (\\d{1,2})";
