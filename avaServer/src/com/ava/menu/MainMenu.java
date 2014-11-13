@@ -7,8 +7,8 @@ import java.util.TreeMap;
 
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
-import com.ava.socket.SocketInputReader;
 import com.ava.socket.SocketMessage;
+import com.ava.socket.SocketMessage.SocketMessageAction;
 import com.ava.socket.SocketMessage.SocketMessageForwardingType;
 import com.ava.socket.SocketMessageFactory;
 
@@ -68,33 +68,33 @@ public class MainMenu implements Menu {
 					NodeDefinition nodeToMessageTo = (NodeDefinition) menu.run();
 					MessageMenu messageMenu = new MessageMenu();
 					String message = (String) messageMenu.run();
-					SocketMessage socketMessage = SocketMessageFactory.createUserMessage(node.getNodeDefinition(), message);
+					SocketMessage socketMessage = SocketMessageFactory.createUserMessage(node.getNodeDefinition(), message, SocketMessageAction.simple);
 					node.sendMessage(nodeToMessageTo, socketMessage);
 					break;
 				}
 				case SEND_BROADCAST_MESSAGE: {
 					MessageMenu messageMenu = new MessageMenu();
 					String message = (String) messageMenu.run();
-					SocketMessage socketMessage = SocketMessageFactory.createUserMessage(node.getNodeDefinition(), message);
+					SocketMessage socketMessage = SocketMessageFactory.createUserMessage(node.getNodeDefinition(), message, SocketMessageAction.simple);
 					node.broadcastMessage(socketMessage);
 					break;
 				}
 				case CLOSE_ALL_SOCKETS: {
-					String message = SocketInputReader.EXIT;
+					String message = "Please exit";
 					SocketMessage socketMessage = SocketMessageFactory.createForwardingUserMessage(SocketMessageForwardingType.broadcast,
-							node.getNodeDefinition(), message);
+							node.getNodeDefinition(), message, SocketMessageAction.exit);
 					node.broadcastMessage(socketMessage);
 					node.closeServer();
 				}
 				case SPREAD_RUMOR: {
 					MessageMenu messageMenu = new MessageMenu();
 					String message = (String) messageMenu.run();
-					String realMessage = SocketInputReader.RUMOR + message;
+					String realMessage = message;
 
 					ForwardingMenu forwardingMenu = new ForwardingMenu();
 					SocketMessageForwardingType type = (SocketMessageForwardingType) forwardingMenu.run();
 
-					SocketMessage socketMessage = SocketMessageFactory.createForwardingUserMessage(type, node.getNodeDefinition(), realMessage);
+					SocketMessage socketMessage = SocketMessageFactory.createForwardingUserMessage(type, node.getNodeDefinition(), realMessage, SocketMessageAction.rumor);
 					node.broadcastMessage(socketMessage);
 					break;
 				}

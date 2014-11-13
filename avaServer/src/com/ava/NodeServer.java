@@ -1,6 +1,6 @@
 package com.ava;
 
-import java.util.List;
+import java.util.Collection;
 
 import com.ava.node.NodeDefinition;
 import com.ava.socket.SocketMessage;
@@ -14,7 +14,7 @@ public interface NodeServer {
 
     void closeServer();
 
-    void connectToOtherNodes(List<NodeDefinition> othersNodes);
+    void connectToOtherNodes(Collection<NodeDefinition> othersNodes);
 
     void broadcastMessage(SocketMessage message);
     

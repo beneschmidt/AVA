@@ -18,13 +18,18 @@ public class SocketMessage {
 	}
 
 	public enum SocketMessageForwardingType {
-		none, broadcast, broadcast_without_sender, broadcast_to_two, broadcast_to_all_but_two, broadcast_to_half;
+		none, broadcast, broadcast_without_sender, broadcast_to_two, broadcast_to_all_but_two, broadcast_to_half, back_to_sender;
+	}
+
+	public enum SocketMessageAction {
+		exit, rumor, simple, rumor_check, rumor_checked, closed;
 	}
 
 	private SocketMessageSource source;
 	private SocketMessageForwardingType forwardingType;
 	private NodeDefinition node;
 	private String message;
+	private SocketMessageAction action;
 
 	/**
 	 * The message can be created by parsing a json String
@@ -39,11 +44,12 @@ public class SocketMessage {
 	public SocketMessage() {
 	}
 
-	SocketMessage(SocketMessageSource source, SocketMessageForwardingType forwardingType, NodeDefinition node, String message) {
+	SocketMessage(SocketMessageSource source, SocketMessageForwardingType forwardingType, NodeDefinition node, String message, SocketMessageAction action) {
 		this.source = source;
 		this.node = node;
 		this.message = message;
 		this.forwardingType = forwardingType;
+		this.action = action;
 	}
 
 	public SocketMessageSource getSource() {
@@ -78,6 +84,14 @@ public class SocketMessage {
 		this.forwardingType = forwardingType;
 	}
 
+	public SocketMessageAction getAction() {
+		return action;
+	}
+
+	public void setAction(SocketMessageAction action) {
+		this.action = action;
+	}
+
 	public String asJson() {
 		String json = new Gson().toJson(this);
 		return json;
@@ -85,7 +99,8 @@ public class SocketMessage {
 
 	@Override
 	public String toString() {
-		return "SocketMessage [source=" + source + ", forwardingType=" + forwardingType + ", node=" + node + ", message=" + message + "]";
+		return "SocketMessage [source=" + source + ", forwardingType=" + forwardingType + ", node=" + node + ", message=" + message + ", action=" + action
+				+ "]";
 	}
 
 }

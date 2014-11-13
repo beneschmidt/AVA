@@ -12,6 +12,7 @@ import com.ava.menu.MainMenu;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
 import com.ava.socket.SocketMessage;
+import com.ava.socket.SocketMessage.SocketMessageAction;
 import com.ava.socket.SocketMessageFactory;
 import com.ava.utils.FileReaderHelper;
 
@@ -41,7 +42,7 @@ public class Startup {
 			System.out.println("Neighbours: " + neighbours);
 			node.startServerAsThread();
 			node.connectToOtherNodes(neighbours);
-			SocketMessage socketMessage = SocketMessageFactory.createSystemMessage(node.getNodeDefinition(), "hey I'm " + node.getNodeDefinition());
+			SocketMessage socketMessage = SocketMessageFactory.createSystemMessage(node.getNodeDefinition(), "hey I'm " + node.getNodeDefinition(), SocketMessageAction.simple);
 			node.broadcastMessage(socketMessage);
 			MainMenu mainMenu = new MainMenu(node);
 			mainMenu.run();

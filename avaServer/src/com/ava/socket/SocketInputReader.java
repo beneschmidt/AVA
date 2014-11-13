@@ -4,21 +4,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.TreeMap;
 
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
+import com.ava.socket.SocketMessage.SocketMessageAction;
+import com.ava.socket.SocketMessage.SocketMessageForwardingType;
 import com.ava.utils.TimeUtils;
 
 /**
  * Thread to read input from a socket and then handle it
  */
 public class SocketInputReader extends Thread {
-
-	public static final String RUMOR = "RUMOR=";
-	public static final String EXIT = "EXIT";
-	public static final String EXIT_OTHERS = "EXIT_OTHERS";
 
 	private Socket socket;
 	private Node node;
@@ -52,25 +51,52 @@ public class SocketInputReader extends Thread {
 	 */
 	private void handleMessage(SocketMessage message) {
 		Map<NodeDefinition, Socket> nextTargets = pickNextTargets(message);
-		if (message.getMessage().equals(EXIT)) {
-			node.closeServer();
-		} else if (message.getMessage().equals(EXIT_OTHERS)) {
-			node.sendMessage(nextTargets, message);
-			node.closeServer();
-		} else if (message.getMessage().startsWith(RUMOR)) {
-			// add rumor to the rumor list
-			int rumorCount = Rumors.getInstance().addRumor(message.getNode(), message.getMessage());
-			if (rumorCount < 3) {
-				// if it wasn't heard of enough nodes, send it forward to more nodes
-				System.out.println(rumorCount + ", I don't believe it yet..." + Rumors.getInstance().getRumor(message.getMessage()));
-				message.setNode(node.getNodeDefinition());
+		switch (message.getAction()) {
+			case exit: {
 				node.sendMessage(nextTargets, message);
-			} else {
-				// if enough nodes told the rumor, it must be true
-				System.out.println("the rumors are true, " + message.getMessage());
+				node.closeServer();
+				break;
 			}
-		} else {
-			node.sendMessage(nextTargets, message);
+			case rumor: {
+				// add rumor to the rumor list
+				int rumorCount = Rumors.getInstance().addRumor(message.getNode(), message.getMessage());
+				if (rumorCount < 3) {
+					Rumor rumor = Rumors.getInstance().getRumor(message.getMessage());
+					// if it wasn't heard of enough nodes, send it forward to more nodes
+					System.out.println(rumorCount + ", I don't believe it yet..." + rumor);
+					message.setNode(node.getNodeDefinition());
+					node.sendMessage(nextTargets, message);
+				} else {
+					// if enough nodes told the rumor, it must be true
+					System.out.println("the rumors are true, " + message.getMessage());
+				}
+				break;
+			}
+			case rumor_check: {
+				Rumor rumor = Rumors.getInstance().getRumor(message.getMessage());
+				if (rumor != null) {
+					int rumorCount = rumor.getReceiveCount();
+					message.setMessage((rumorCount >= 3) + "");
+				} else {
+					message.setMessage(false + "");
+				}
+				message.setNode(node.getNodeDefinition());
+				message.setAction(SocketMessageAction.rumor_checked);
+				message.setForwardingType(SocketMessageForwardingType.none);
+				node.sendMessage(nextTargets, message);
+				break;
+			}
+			case rumor_checked: {
+				RumorChecked.getInstance().addRumorCheck(message.getNode(), Boolean.valueOf(message.getMessage()));
+				break;
+			}
+			case closed: {
+				node.getConnectedSockets().remove(message.getNode());
+				break;
+			}
+			default: {
+				node.sendMessage(nextTargets, message);
+			}
 		}
 	}
 
@@ -104,7 +130,7 @@ public class SocketInputReader extends Thread {
 			case broadcast_to_all_but_two: {
 				// exlude the last two nodes
 				int i = node.getConnectedSockets().size();
-				int numberOfNodes = i-2;
+				int numberOfNodes = i - 2;
 				nextTargets = pickNodesFromNodeList(message, numberOfNodes);
 				break;
 			}
@@ -112,6 +138,22 @@ public class SocketInputReader extends Thread {
 				int max = (node.getConnectedSockets().size() - 1) / 2;
 				nextTargets = pickNodesFromNodeList(message, max);
 				break;
+			}
+			case back_to_sender: {
+				Socket backSocket = null;
+				if (node.getConnectedSockets().containsKey(message.getNode())) {
+					backSocket = socket;
+				} else {
+					try {
+						node.connectionToNode(message.getNode());
+						backSocket = node.getConnectedSockets().get(message.getNode());
+					} catch (UnknownHostException e) {
+						e.printStackTrace();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				nextTargets.put(message.getNode(), backSocket);
 			}
 			default: {
 				break;
@@ -129,10 +171,10 @@ public class SocketInputReader extends Thread {
 	 * @return nodes
 	 */
 	private Map<NodeDefinition, Socket> pickNodesFromNodeList(SocketMessage message, int numberOfNodes) {
-		if(numberOfNodes >= node.getConnectedSockets().size()){
+		if (numberOfNodes >= node.getConnectedSockets().size()) {
 			return node.getConnectedSockets();
 		}
-		
+
 		Map<NodeDefinition, Socket> nextTargets = new TreeMap<NodeDefinition, Socket>();
 		int i = 0;
 		for (Map.Entry<NodeDefinition, Socket> nextEntry : node.getConnectedSockets().entrySet()) {

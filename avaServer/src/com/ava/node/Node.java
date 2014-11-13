@@ -4,13 +4,14 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
 import com.ava.NodeServer;
 import com.ava.socket.SocketInputReader;
 import com.ava.socket.SocketMessage;
+import com.ava.socket.SocketMessage.SocketMessageAction;
 import com.ava.socket.SocketMessageFactory;
 import com.ava.socket.SocketOutputWriter;
 import com.ava.utils.ResourceHelper;
@@ -30,14 +31,14 @@ public class Node implements NodeServer {
 		return nodeDefinition;
 	}
 
-	public void connectToOtherNodes(List<NodeDefinition> nodesToConnect) {
+	public void connectToOtherNodes(Collection<NodeDefinition> nodesToConnect) {
 		for (NodeDefinition nextDef : nodesToConnect) {
 			if (nextDef.getId() != nodeDefinition.getId()) {
 				boolean connected = false;
 				int connectionTries = 0;
 				while (!connected && connectionTries < 10) {
 					try {
-						connectionToNode(nextDef, connectionTries);
+						connectionToNode(nextDef);
 						connected = true;
 					} catch (Exception e) {
 						System.err.println("Verbindung mit port " + nextDef.getPort() + " fehlgeschlagen!" + e.getMessage());
@@ -53,7 +54,7 @@ public class Node implements NodeServer {
 		}
 	}
 
-	private void connectionToNode(NodeDefinition nextDef, int connectionTries) throws UnknownHostException, IOException {
+	public void connectionToNode(NodeDefinition nextDef) throws UnknownHostException, IOException {
 		Socket socket = new Socket(nextDef.getIp(), nextDef.getPort());
 		connectedSockets.put(nextDef, socket);
 		System.out.println("Verbindung hergestellt: " + nextDef);
@@ -112,7 +113,8 @@ public class Node implements NodeServer {
 
 	public void closeAllConnections() {
 		try {
-			SocketMessage socketMessage = SocketMessageFactory.createSystemMessage(nodeDefinition, nodeDefinition + " goes offline");
+			SocketMessage socketMessage = SocketMessageFactory
+					.createSystemMessage(nodeDefinition, nodeDefinition + " goes offline", SocketMessageAction.closed);
 			SocketOutputWriter writer = new SocketOutputWriter();
 			for (Socket socket : connectedSockets.values()) {
 				writer.writeMessage(socket, socketMessage);
