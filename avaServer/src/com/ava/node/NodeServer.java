@@ -1,8 +1,7 @@
-package com.ava;
+package com.ava.node;
 
 import java.util.Collection;
 
-import com.ava.node.NodeDefinition;
 import com.ava.socket.SocketMessage;
 
 /**

@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.ava.NodeServer;
 import com.ava.socket.SocketInputReader;
 import com.ava.socket.SocketMessage;
 import com.ava.socket.SocketMessage.SocketMessageAction;
