@@ -25,6 +25,12 @@ public class NodeDefinition implements Comparable<NodeDefinition> {
 		port = Integer.parseInt(values.get(2));
 	}
 
+	public NodeDefinition(Integer id, String ip, int port) {
+		this.id = id;
+		this.ip = ip;
+		this.port = port;
+	}
+
 	private List<String> parseDefinitionByString(String stringDefinition) {
 		String pattern = "(\\d{0,2}) (.*):(\\d{1,6})";
 		// Create a Pattern object

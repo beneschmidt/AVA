@@ -56,40 +56,45 @@ public class SocketMessage {
 		return source;
 	}
 
-	public void setSource(SocketMessageSource source) {
+	public SocketMessage setSource(SocketMessageSource source) {
 		this.source = source;
+		return this;
 	}
 
 	public NodeDefinition getNode() {
 		return node;
 	}
 
-	public void setNode(NodeDefinition node) {
+	public SocketMessage setNode(NodeDefinition node) {
 		this.node = node;
+		return this;
 	}
 
 	public String getMessage() {
 		return message;
 	}
 
-	public void setMessage(String message) {
+	public SocketMessage setMessage(String message) {
 		this.message = message;
+		return this;
 	}
 
 	public SocketMessageForwardingType getForwardingType() {
 		return forwardingType;
 	}
 
-	public void setForwardingType(SocketMessageForwardingType forwardingType) {
+	public SocketMessage setForwardingType(SocketMessageForwardingType forwardingType) {
 		this.forwardingType = forwardingType;
+		return this;
 	}
 
 	public SocketMessageAction getAction() {
 		return action;
 	}
 
-	public void setAction(SocketMessageAction action) {
+	public SocketMessage setAction(SocketMessageAction action) {
 		this.action = action;
+		return this;
 	}
 
 	public String asJson() {

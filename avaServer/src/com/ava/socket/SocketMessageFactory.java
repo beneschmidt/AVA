@@ -7,6 +7,14 @@ import com.ava.socket.SocketMessage.SocketMessageSource;
 
 public class SocketMessageFactory {
 
+	public static SocketMessage createUserMessage() {
+		return new SocketMessage().setSource(SocketMessageSource.user).setForwardingType(SocketMessageForwardingType.none);
+	}
+
+	public static SocketMessage createSystemMessage() {
+		return new SocketMessage().setSource(SocketMessageSource.system).setForwardingType(SocketMessageForwardingType.none);
+	}
+
 	public static SocketMessage createUserMessage(NodeDefinition node, String message, SocketMessageAction action) {
 		return new SocketMessage(SocketMessageSource.user, SocketMessageForwardingType.none, node, message, action);
 	}
@@ -15,11 +23,13 @@ public class SocketMessageFactory {
 		return new SocketMessage(SocketMessageSource.system, SocketMessageForwardingType.none, node, message, action);
 	}
 
-	public static SocketMessage createForwardingUserMessage(SocketMessageForwardingType forwardingType, NodeDefinition node, String message, SocketMessageAction action) {
+	public static SocketMessage createForwardingUserMessage(SocketMessageForwardingType forwardingType, NodeDefinition node, String message,
+			SocketMessageAction action) {
 		return new SocketMessage(SocketMessageSource.user, forwardingType, node, message, action);
 	}
 
-	public static SocketMessage createForwardingSystemMessage(SocketMessageForwardingType forwardingType, NodeDefinition node, String message, SocketMessageAction action) {
+	public static SocketMessage createForwardingSystemMessage(SocketMessageForwardingType forwardingType, NodeDefinition node, String message,
+			SocketMessageAction action) {
 		return new SocketMessage(SocketMessageSource.system, forwardingType, node, message, action);
 	}
 }

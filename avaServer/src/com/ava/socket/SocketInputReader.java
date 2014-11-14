@@ -36,7 +36,7 @@ public class SocketInputReader extends Thread {
 			while ((inputLine = in.readLine()) != null) {
 				String currentTime = TimeUtils.getCurrentTimeString();
 				SocketMessage message = SocketMessage.fromJson(inputLine);
-				System.out.println("[IN] " + currentTime + ": " + message.getNode().getPort() + "=" + message.getMessage());
+				System.out.println("[-->] " + currentTime + ": " + message.getNode().getPort() + "=" + message.getMessage());
 
 				handleMessage(message);
 			}
@@ -87,7 +87,7 @@ public class SocketInputReader extends Thread {
 				break;
 			}
 			case rumor_checked: {
-				RumorChecked.getInstance().addRumorCheck(message.getNode(), Boolean.valueOf(message.getMessage()));
+				RumorChecker.getInstance().rumorCheckedAtNode(message.getNode(), Boolean.valueOf(message.getMessage()));
 				break;
 			}
 			case closed: {
