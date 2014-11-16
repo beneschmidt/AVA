@@ -5,6 +5,7 @@ import java.util.Map;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
 import com.ava.node.NodeListReader;
+import com.ava.node.NodeType;
 import com.ava.socket.RumorChecker;
 import com.ava.socket.SocketMessage;
 import com.ava.socket.SocketMessage.SocketMessageAction;
@@ -19,7 +20,7 @@ public class ObserverStartup {
 
 	public static void main(String[] args) {
 		Map<Integer, NodeDefinition> nodes = NodeListReader.readNodeDefinitionsFromFile(args[0]);
-		NodeDefinition nodeDefinition = new NodeDefinition(0, "localhost", 12000);
+		NodeDefinition nodeDefinition = new NodeDefinition(0, "localhost", 12000, NodeType.observer);
 		Node node = new Node(nodeDefinition);
 
 		node.startServerAsThread();

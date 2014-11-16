@@ -22,12 +22,13 @@ public class SocketMessage {
 	}
 
 	public enum SocketMessageAction {
-		exit, rumor, simple, rumor_check, rumor_checked, closed;
+		exit, rumor, simple, rumor_check, rumor_checked, closed, advertisement, purchaseDecision;
 	}
 
 	private SocketMessageSource source;
 	private SocketMessageForwardingType forwardingType;
 	private NodeDefinition node;
+	private NodeDefinition initiator;
 	private String message;
 	private SocketMessageAction action;
 
@@ -44,12 +45,14 @@ public class SocketMessage {
 	public SocketMessage() {
 	}
 
-	SocketMessage(SocketMessageSource source, SocketMessageForwardingType forwardingType, NodeDefinition node, String message, SocketMessageAction action) {
+	SocketMessage(SocketMessageSource source, SocketMessageForwardingType forwardingType, NodeDefinition initiator, NodeDefinition node, String message,
+			SocketMessageAction action) {
 		this.source = source;
 		this.node = node;
 		this.message = message;
 		this.forwardingType = forwardingType;
 		this.action = action;
+		this.initiator = initiator;
 	}
 
 	public SocketMessageSource getSource() {
@@ -100,6 +103,14 @@ public class SocketMessage {
 	public String asJson() {
 		String json = new Gson().toJson(this);
 		return json;
+	}
+
+	public NodeDefinition getInitiator() {
+		return initiator;
+	}
+
+	public void setInitiator(NodeDefinition initiator) {
+		this.initiator = initiator;
 	}
 
 	@Override

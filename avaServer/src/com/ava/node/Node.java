@@ -113,7 +113,7 @@ public class Node implements NodeServer {
 	public void closeAllConnections() {
 		try {
 			SocketMessage socketMessage = SocketMessageFactory
-					.createSystemMessage(nodeDefinition, nodeDefinition + " goes offline", SocketMessageAction.closed);
+					.createSystemMessage(nodeDefinition, nodeDefinition, nodeDefinition + " goes offline", SocketMessageAction.closed);
 			SocketOutputWriter writer = new SocketOutputWriter();
 			for (Socket socket : connectedSockets.values()) {
 				writer.writeMessage(socket, socketMessage);

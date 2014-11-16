@@ -13,6 +13,7 @@ public class NodeDefinition implements Comparable<NodeDefinition> {
 	private final Integer id;
 	private final String ip;
 	private final int port;
+	private final NodeType nodeType;
 
 	/**
 	 * Node definition can be created through a given string
@@ -23,16 +24,18 @@ public class NodeDefinition implements Comparable<NodeDefinition> {
 		id = Integer.parseInt(values.get(0));
 		ip = values.get(1);
 		port = Integer.parseInt(values.get(2));
+		nodeType = NodeType.valueOf(values.get(3));
 	}
 
-	public NodeDefinition(Integer id, String ip, int port) {
+	public NodeDefinition(Integer id, String ip, int port, NodeType nodeType) {
 		this.id = id;
 		this.ip = ip;
 		this.port = port;
+		this.nodeType = nodeType;
 	}
 
 	private List<String> parseDefinitionByString(String stringDefinition) {
-		String pattern = "(\\d{0,2}) (.*):(\\d{1,6})";
+		String pattern = "(\\d{0,2}) (.*):(\\d{1,6}) ((customer|business|observer))";
 		// Create a Pattern object
 		Pattern r = Pattern.compile(pattern);
 		List<String> values = new LinkedList<String>();
@@ -43,6 +46,7 @@ public class NodeDefinition implements Comparable<NodeDefinition> {
 			values.add(m.group(1));
 			values.add(m.group(2));
 			values.add(m.group(3));
+			values.add(m.group(4));
 			return values;
 		} else {
 			throw new RuntimeException("Kann String leider nicht parsen!" + stringDefinition);
@@ -61,9 +65,13 @@ public class NodeDefinition implements Comparable<NodeDefinition> {
 		return port;
 	}
 
+	public NodeType getNodeType() {
+		return nodeType;
+	}
+
 	@Override
 	public String toString() {
-		return "NodeDefinition [id=" + id + ", ip=" + ip + ", port=" + port + "]";
+		return nodeType.toString().toUpperCase()+" [id=" + id + ", ip=" + ip + ", port=" + port+"]";
 	}
 
 	@Override

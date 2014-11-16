@@ -15,21 +15,21 @@ public class SocketMessageFactory {
 		return new SocketMessage().setSource(SocketMessageSource.system).setForwardingType(SocketMessageForwardingType.none);
 	}
 
-	public static SocketMessage createUserMessage(NodeDefinition node, String message, SocketMessageAction action) {
-		return new SocketMessage(SocketMessageSource.user, SocketMessageForwardingType.none, node, message, action);
+	public static SocketMessage createUserMessage(NodeDefinition initator, NodeDefinition node, String message, SocketMessageAction action) {
+		return new SocketMessage(SocketMessageSource.user, SocketMessageForwardingType.none, initator, node, message, action);
 	}
 
-	public static SocketMessage createSystemMessage(NodeDefinition node, String message, SocketMessageAction action) {
-		return new SocketMessage(SocketMessageSource.system, SocketMessageForwardingType.none, node, message, action);
+	public static SocketMessage createSystemMessage(NodeDefinition initator, NodeDefinition node, String message, SocketMessageAction action) {
+		return new SocketMessage(SocketMessageSource.system, SocketMessageForwardingType.none, initator, node, message, action);
 	}
 
-	public static SocketMessage createForwardingUserMessage(SocketMessageForwardingType forwardingType, NodeDefinition node, String message,
+	public static SocketMessage createForwardingUserMessage(NodeDefinition initator, SocketMessageForwardingType forwardingType, NodeDefinition node, String message,
 			SocketMessageAction action) {
-		return new SocketMessage(SocketMessageSource.user, forwardingType, node, message, action);
+		return new SocketMessage(SocketMessageSource.user, forwardingType, initator, node, message, action);
 	}
 
-	public static SocketMessage createForwardingSystemMessage(SocketMessageForwardingType forwardingType, NodeDefinition node, String message,
+	public static SocketMessage createForwardingSystemMessage(NodeDefinition initator, SocketMessageForwardingType forwardingType, NodeDefinition node, String message,
 			SocketMessageAction action) {
-		return new SocketMessage(SocketMessageSource.system, forwardingType, node, message, action);
+		return new SocketMessage(SocketMessageSource.system, forwardingType, initator, node, message, action);
 	}
 }
