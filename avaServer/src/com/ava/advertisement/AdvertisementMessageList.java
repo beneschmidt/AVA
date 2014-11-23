@@ -1,16 +1,13 @@
 package com.ava.advertisement;
 
 import java.util.LinkedList;
-import java.util.List;
 
 import com.ava.socket.SocketMessage;
 
-public class AdvertisementMessageList implements BusinessMessageList{
+public class AdvertisementMessageList extends BusinessMessageList<AdvertisementMessage> {
 
 	private static AdvertisementMessageList instance;
 	private static final int max = 3;
-
-	private List<AdvertisementMessage> messages;
 
 	private AdvertisementMessageList() {
 		messages = new LinkedList<>();
@@ -42,4 +39,8 @@ public class AdvertisementMessageList implements BusinessMessageList{
 		return false;
 	}
 
+	@Override
+	public AdvertisementMessage createNewObject(SocketMessage message) {
+		return new AdvertisementMessage(message, max);
+	}
 }

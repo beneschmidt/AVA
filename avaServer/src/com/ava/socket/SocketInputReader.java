@@ -8,6 +8,8 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.ava.advertisement.AdvertisementMessageList;
+import com.ava.advertisement.BoughtItems;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
 import com.ava.socket.SocketMessage.SocketMessageAction;
@@ -92,6 +94,29 @@ public class SocketInputReader extends Thread {
 			}
 			case closed: {
 				node.getConnectedSockets().remove(message.getNode());
+				break;
+			}
+			case advertisement: {
+				if (BoughtItems.getInstance().canIBuyThat(message)) {
+					boolean shouldBuy = AdvertisementMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
+					if (shouldBuy) {
+						BoughtItems.getInstance().itemBought(message);
+						AdvertisementMessageList.getInstance().clearHistoryForMessage(message);
+					}
+				} else {
+					// termination
+				}
+				// TODO kaufen und enstprechend reagieren
+				// TODO irgendwie weiterleiten
+				break;
+			}
+			case purchaseDecision: {
+				boolean shouldBuy = AdvertisementMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
+				if (shouldBuy) {
+					// TODO kaufen und enstprechend reagieren
+				} else {
+					// TODO irgendwie weiterleiten
+				}
 				break;
 			}
 			default: {

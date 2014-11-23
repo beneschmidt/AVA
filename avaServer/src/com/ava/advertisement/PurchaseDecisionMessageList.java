@@ -1,14 +1,12 @@
 package com.ava.advertisement;
 
 import java.util.LinkedList;
-import java.util.List;
 
 import com.ava.socket.SocketMessage;
 
-public class PurchaseDecisionMessageList implements BusinessMessageList {
+public class PurchaseDecisionMessageList extends BusinessMessageList<PurchaseDecisionMessage> {
 
 	private static PurchaseDecisionMessageList instance;
-	private List<PurchaseDecisionMessage> messages;
 	private static final int max = 3;
 
 	private PurchaseDecisionMessageList() {
@@ -39,4 +37,10 @@ public class PurchaseDecisionMessageList implements BusinessMessageList {
 		}
 		return false;
 	}
+
+	@Override
+	public PurchaseDecisionMessage createNewObject(SocketMessage message) {
+		return new PurchaseDecisionMessage(message, max);
+	}
+
 }
