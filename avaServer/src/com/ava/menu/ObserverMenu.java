@@ -3,9 +3,12 @@ package com.ava.menu;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Map;
+import java.util.TreeMap;
 
+import com.ava.advertisement.ItemStatistics;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
+import com.ava.node.NodeType;
 import com.ava.socket.RumorChecker;
 import com.ava.socket.SocketMessage;
 import com.ava.socket.SocketMessage.SocketMessageAction;
@@ -89,10 +92,34 @@ public class ObserverMenu implements Menu {
 				break;
 			}
 			case business: {
-				// TODO zu customer verbinden und nach Produkt fragen
+				Map<Integer, NodeDefinition> customers = new TreeMap<Integer, NodeDefinition>();
+				for (NodeDefinition node : nodes.values()) {
+					if (node.getNodeType() == NodeType.customer) {
+						customers.put(node.getId(), node);
+					}
+				}
 
+				node.connectToOtherNodes(customers.values());
+				MessageMenu messageMenu = new MessageMenu();
+				String message = (String) messageMenu.run();
+
+				SocketMessage socketMessage = SocketMessageFactory.createSystemMessage().setForwardingType(SocketMessageForwardingType.back_to_sender)
+						.setNode(node.getNodeDefinition()).setMessage(message).setAction(SocketMessageAction.checkItemBought);
+				node.broadcastMessage(socketMessage);
+
+				ItemStatistics statistics = ItemStatistics.getInstance();
+				while (statistics.checkedNodesCount() != node.getConnectedSockets().size()) {
+					System.out.println(statistics.checkedNodesCount() + "/" + node.getConnectedSockets().size());
+				}
+				System.out.println(statistics.checkedNodesCount() + "/" + node.getConnectedSockets().size());
+				FileWriterHelper helper = new FileWriterHelper(message + "_itemStatistics.txt");
+				helper.writeToFile(statistics.toString());
+
+				node.closeAllConnections();
+				break;
 			}
 			default: {
+				node.closeAllConnections();
 				System.out.println("EXIT");
 				System.exit(0);
 				break;

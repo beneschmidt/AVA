@@ -59,12 +59,14 @@ public class BoughtItem implements Comparable<BoughtItem> {
 
 	@Override
 	public int compareTo(BoughtItem o) {
-		int initiatorCompare = message.getInitiator().compareTo(o.getMessage().getInitiator());
-		if (initiatorCompare == 0) {
-			return message.getMessage().compareTo(o.getMessage().getMessage());
-		} else {
-			return initiatorCompare;
-		}
+		// TODO maybe compare with initiator too
+		//		int initiatorCompare = message.getInitiator().compareTo(o.getMessage().getInitiator());
+		//		if (initiatorCompare == 0) {
+		//			return message.getMessage().compareTo(o.getMessage().getMessage());
+		//		} else {
+		//			return initiatorCompare;
+		//		}
+		return message.getMessage().compareTo(o.getMessage().getMessage());
 	}
 
 }

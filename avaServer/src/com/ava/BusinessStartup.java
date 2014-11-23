@@ -3,6 +3,7 @@ package com.ava;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import com.ava.advertisement.AdvertisementMessageList;
 import com.ava.advertisement.BoughtItems;
@@ -16,8 +17,9 @@ import com.ava.node.NodeFactory;
 import com.ava.node.NodeListReader;
 import com.ava.node.NodeType;
 import com.ava.socket.SocketMessage;
-import com.ava.socket.SocketMessageFactory;
 import com.ava.socket.SocketMessage.SocketMessageAction;
+import com.ava.socket.SocketMessageFactory;
+import com.ava.utils.BusinessPropertiesReader;
 import com.ava.utils.FileReaderHelper;
 
 public class BusinessStartup {
@@ -30,9 +32,10 @@ public class BusinessStartup {
 				System.out.println("usage: java -jar {jarname} {node definition file} {graph file} {optional: node-id}");
 			}
 
-			BoughtItems.getInstance().setMax(3);
-			AdvertisementMessageList.getInstance().setMax(3);
-			PurchaseDecisionMessageList.getInstance().setMax(3);
+			Properties businessProperties = BusinessPropertiesReader.readProperties();
+			BoughtItems.getInstance().setMax(Integer.parseInt(businessProperties.getProperty("maxBoughtItems")));
+			AdvertisementMessageList.getInstance().setMax(Integer.parseInt(businessProperties.getProperty("maxAd")));
+			PurchaseDecisionMessageList.getInstance().setMax(Integer.parseInt(businessProperties.getProperty("maxPurchase")));
 
 			Map<Integer, NodeDefinition> nodes = NodeListReader.readNodeDefinitionsFromFile(args[0]);
 			NodeDefinition nodeDefinition = null;

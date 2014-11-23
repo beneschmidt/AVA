@@ -10,12 +10,12 @@ import java.util.TreeMap;
 
 import com.ava.advertisement.AdvertisementMessageList;
 import com.ava.advertisement.BoughtItems;
+import com.ava.advertisement.ItemStatistics;
 import com.ava.advertisement.PurchaseDecisionMessageList;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
 import com.ava.socket.SocketMessage.SocketMessageAction;
 import com.ava.socket.SocketMessage.SocketMessageForwardingType;
-import com.ava.utils.TimeUtils;
 
 /**
  * Thread to read input from a socket and then handle it
@@ -24,12 +24,12 @@ public class SocketInputReader extends Thread {
 
 	private Socket socket;
 	private Node node;
-	private BoughtItems boughtItems;
+	private BoughtItems alreadyBoughtItems;
 
 	public SocketInputReader(Node node, Socket socket) {
 		this.socket = socket;
 		this.node = node;
-		boughtItems = BoughtItems.getInstance();
+		alreadyBoughtItems = BoughtItems.getInstance();
 	}
 
 	@Override
@@ -39,7 +39,7 @@ public class SocketInputReader extends Thread {
 
 			String inputLine = "";
 			while ((inputLine = in.readLine()) != null) {
-				String currentTime = TimeUtils.getCurrentTimeString();
+				//				String currentTime = TimeUtils.getCurrentTimeString();
 				SocketMessage message = SocketMessage.fromJson(inputLine);
 				//				System.out.println("[<--] " + currentTime + ": " + message.getNode().getPort() + "=" + message.getMessage());
 
@@ -100,19 +100,19 @@ public class SocketInputReader extends Thread {
 				break;
 			}
 			case advertisement: {
-				if (boughtItems.canIBuyThat(message)) {
+				if (alreadyBoughtItems.canIBuyThat(message)) {
 					System.out.println("I can buy: " + message.getMessage());
 					boolean shouldBuy = AdvertisementMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
 					if (shouldBuy) {
 						try {
-							boughtItems.itemBought(message);
-							System.out.println("I bought: " + message.getMessage() + " for the " + boughtItems.buyCount(message) + ". time");
+							alreadyBoughtItems.itemBought(message);
+							System.out.println("I bought: " + message.getMessage() + " for the " + alreadyBoughtItems.buyCount(message) + ". time");
 							node.broadcastMessage(message);
 
 							AdvertisementMessageList.getInstance().clearHistoryForMessage(message);
 							sendBoughtItemMessageToInitiator(message);
 						} catch (IndexOutOfBoundsException e) {
-							System.out.println("no shoving pls, can't buy more than " + boughtItems.getMax());
+							System.out.println("no shoving pls, can't buy more than " + alreadyBoughtItems.getMax());
 						} catch (UnknownHostException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -132,7 +132,7 @@ public class SocketInputReader extends Thread {
 			case purchaseDecision: {
 				boolean shouldBuy = PurchaseDecisionMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
 				if (shouldBuy) {
-					boughtItems.itemBought(message);
+					alreadyBoughtItems.itemBought(message);
 					PurchaseDecisionMessageList.getInstance().clearHistoryForMessage(message);
 					try {
 						sendBoughtItemMessageToInitiator(message);
@@ -156,6 +156,18 @@ public class SocketInputReader extends Thread {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+			}
+			case checkItemBought: {
+				int buyCount = alreadyBoughtItems.buyCount(message);
+				message.setMessage(buyCount + "");
+				message.setNode(node.getNodeDefinition());
+				message.setAction(SocketMessageAction.itemBoughtChecked);
+				message.setForwardingType(SocketMessageForwardingType.none);
+				node.sendMessage(nextTargets, message);
+				break;
+			}
+			case itemBoughtChecked: {
+				ItemStatistics.getInstance().itemsCheckedAtNode(message.getNode(), Integer.parseInt(message.getMessage()));
 			}
 			default: {
 				node.sendMessage(nextTargets, message);
