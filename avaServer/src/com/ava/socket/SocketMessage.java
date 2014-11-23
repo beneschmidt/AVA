@@ -22,7 +22,7 @@ public class SocketMessage {
 	}
 
 	public enum SocketMessageAction {
-		exit, rumor, simple, rumor_check, rumor_checked, closed, advertisement, purchaseDecision;
+		exit, rumor, simple, rumor_check, rumor_checked, closed, advertisement, purchaseDecision, itemBought;
 	}
 
 	private SocketMessageSource source;
@@ -109,8 +109,9 @@ public class SocketMessage {
 		return initiator;
 	}
 
-	public void setInitiator(NodeDefinition initiator) {
+	public SocketMessage setInitiator(NodeDefinition initiator) {
 		this.initiator = initiator;
+		return this;
 	}
 
 	@Override

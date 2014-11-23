@@ -1,2 +1,2 @@
  
-    start cmd /k java -jar Observer.jar ueb1_input.txt "Test"
+    start cmd /k java -jar Observer.jar ueb2_input.txt "Test"

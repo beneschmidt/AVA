@@ -1,12 +1,21 @@
 package com.ava;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
+import com.ava.graph.NodeGraph;
+import com.ava.menu.MainMenu;
 import com.ava.menu.SimpleNodeSelectionMenu;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
+import com.ava.node.NodeFactory;
 import com.ava.node.NodeListReader;
+import com.ava.node.NodeType;
+import com.ava.socket.SocketMessage;
+import com.ava.socket.SocketMessageFactory;
+import com.ava.socket.SocketMessage.SocketMessageAction;
+import com.ava.utils.FileReaderHelper;
 
 public class BusinessStartup {
 
@@ -27,9 +36,37 @@ public class BusinessStartup {
 				nodeDefinition = nodes.get(Integer.parseInt(args[2]));
 			}
 			System.out.println("I am: " + nodeDefinition);
-			node = new Node(nodeDefinition);
+			node = NodeFactory.createNode(nodeDefinition);
+			List<NodeDefinition> neighbours = loadOwnNeighboursFromFile(nodeDefinition.getId(), nodes, args[1]);
+			logNeighbours(neighbours);
+
+			node.startServerAsThread();
+			node.connectToOtherNodes(neighbours);
+			SocketMessage socketMessage = SocketMessageFactory.createSystemMessage().setNode(node.getNodeDefinition())
+					.setMessage("hey I'm " + node.getNodeDefinition()).setAction(SocketMessageAction.simple);
+			node.broadcastMessage(socketMessage);
+			
+			if(node.getNodeDefinition().getNodeType()==NodeType.business){
+				MainMenu mainMenu = new MainMenu(node);
+				mainMenu.run();
+			}
 		} catch (Exception e) {
 			System.err.println(e);
 		}
+	}
+
+	private static void logNeighbours(List<NodeDefinition> neighbours) {
+		StringBuilder string = new StringBuilder("Neighbours: ");
+		for (NodeDefinition nextDefinition : neighbours) {
+			string.append(nextDefinition.getId()).append(", ");
+		}
+		System.out.println(string.toString());
+	}
+
+	private static List<NodeDefinition> loadOwnNeighboursFromFile(Integer ownId, Map<Integer, NodeDefinition> nodes, String fileName) {
+		FileReaderHelper helper = new FileReaderHelper(fileName);
+		List<String> fileContent = helper.readFileAsRows();
+		NodeGraph nodeGraph = new NodeGraph(nodes, fileContent);
+		return nodeGraph.getDefinitionsForNode(ownId);
 	}
 }

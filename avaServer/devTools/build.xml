@@ -15,9 +15,9 @@
 
 	<!-- die libraries fuer die Test-Dateien laden -->
 	<path id="test-classpath">
-		<!-- die oben referenzierten Libraries k�nnen auch hier wieder verwendet werden -->
+		<!-- die oben referenzierten Libraries koennen auch hier wieder verwendet werden -->
 		<path refid="libraries" />
-		<!-- damit die Tests ausgef�hrt werden k�nnen, m�ssen die verwendeten Klassen aus dem normalen
+		<!-- damit die Tests ausgef�hrt werden koennen, m�ssen die verwendeten Klassen aus dem normalen
 		Package mit verwendet werden (kompiliert) -->
 		<pathelement location="${classes}" />
 		<pathelement location="${testclasses}" />
@@ -30,6 +30,7 @@
 		<antcall target="package" />
 		<antcall target="package.graphcreator" />
 		<antcall target="package.oberserver" />
+		<antcall target="package.business" />
 		<antcall target="copy.setup" />
 		<antcall target="copy.to.desktop" />
 	</target>
@@ -125,28 +126,50 @@
 			</manifest>
 		</jar>
 	</target>
-	
+
 	<!-- die kompilierten class-Dateien in einer JAR verpacken -->
-		<target name="package.oberserver" depends="init">
-			<!-- aktuelle Zeit merken -->
-			<tstamp>
-				<format property="time" pattern="dd.MM.yyyy HH:mm:ss" locale="de,DE" />
-			</tstamp>
+	<target name="package.oberserver" depends="init">
+		<!-- aktuelle Zeit merken -->
+		<tstamp>
+			<format property="time" pattern="dd.MM.yyyy HH:mm:ss" locale="de,DE" />
+		</tstamp>
 
-			<!-- .class-Dateien in JAR verpacken -->
-			<jar destfile="${dist}/${observerjarname}">
-				<fileset dir="${classes}" />
+		<!-- .class-Dateien in JAR verpacken -->
+		<jar destfile="${dist}/${observerjarname}">
+			<fileset dir="${classes}" />
 
-				<manifest>
-					<attribute name="Implementation-Title" value="${observerjartitle}" />
-					<attribute name="Implementation-Version" value="${version}" />
-					<attribute name="Main-Class" value="${observermainclass}" />
-					<attribute name="Built-By" value="${user.name}" />
-					<attribute name="Built-Time" value="${time}" />
-					<attribute name="Class-Path" value="lib/gson-2.2.4.jar" />
-				</manifest>
-			</jar>
-		</target>
+			<manifest>
+				<attribute name="Implementation-Title" value="${observerjartitle}" />
+				<attribute name="Implementation-Version" value="${version}" />
+				<attribute name="Main-Class" value="${observermainclass}" />
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Built-Time" value="${time}" />
+				<attribute name="Class-Path" value="lib/gson-2.2.4.jar" />
+			</manifest>
+		</jar>
+	</target>
+
+	<!-- die kompilierten class-Dateien in einer JAR verpacken -->
+	<target name="package.business" depends="init">
+		<!-- aktuelle Zeit merken -->
+		<tstamp>
+			<format property="time" pattern="dd.MM.yyyy HH:mm:ss" locale="de,DE" />
+		</tstamp>
+
+		<!-- .class-Dateien in JAR verpacken -->
+		<jar destfile="${dist}/${businessjarname}">
+			<fileset dir="${classes}" />
+
+			<manifest>
+				<attribute name="Implementation-Title" value="${businessjartitle}" />
+				<attribute name="Implementation-Version" value="${version}" />
+				<attribute name="Main-Class" value="${businessmainclass}" />
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Built-Time" value="${time}" />
+				<attribute name="Class-Path" value="lib/gson-2.2.4.jar" />
+			</manifest>
+		</jar>
+	</target>
 
 	<!-- JUNIT-Java-Dateien kompilieren -->
 	<target name="compile.test">
@@ -186,9 +209,9 @@
 		<mkdir dir="${setup}" />
 
 		<!-- copy exe, resource folder, properties files and log4j-config -->
-		<copy tofile="${setup}/${jarname}" file="${dist}/${jarname}" />
-		<copy tofile="${setup}/${graphjarname}" file="${dist}/${graphjarname}" />
-		<copy tofile="${setup}/${observerjarname}" file="${dist}/${observerjarname}" />
+		<copy todir="${setup}">
+			<fileset dir="${dist}" />
+		</copy>
 		<copy todir="${setup}">
 			<fileset dir="${resources}" />
 		</copy>

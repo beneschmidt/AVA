@@ -9,6 +9,16 @@ import java.io.InputStreamReader;
  *
  */
 public class MessageMenu implements Menu {
+	
+	private String message;
+	
+	public MessageMenu(String message){
+		this.message = message;
+	}
+	
+	public MessageMenu(){
+		this("Enter your message:");
+	}
 
 	@Override
 	public Object run() {
@@ -34,6 +44,6 @@ public class MessageMenu implements Menu {
 
 	@Override
 	public String toString() {
-		return "Enter your message:";
+		return message;
 	}
 }
