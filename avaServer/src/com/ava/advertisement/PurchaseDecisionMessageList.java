@@ -7,7 +7,6 @@ import com.ava.socket.SocketMessage;
 public class PurchaseDecisionMessageList extends BusinessMessageList<PurchaseDecisionMessage> {
 
 	private static PurchaseDecisionMessageList instance;
-	private static final int max = 3;
 
 	private PurchaseDecisionMessageList() {
 		messages = new LinkedList<>();
@@ -22,7 +21,7 @@ public class PurchaseDecisionMessageList extends BusinessMessageList<PurchaseDec
 
 	@Override
 	public boolean iHeardThatAndIWonderedIfIShouldBuy(SocketMessage socketMessage) {
-		PurchaseDecisionMessage newMessage = new PurchaseDecisionMessage(socketMessage, max);
+		PurchaseDecisionMessage newMessage = new PurchaseDecisionMessage(socketMessage, getMax());
 		if (messages.contains(newMessage)) {
 			// walk through all the messages to find out which one should be updated
 			for (PurchaseDecisionMessage nextMessage : messages) {
@@ -40,7 +39,7 @@ public class PurchaseDecisionMessageList extends BusinessMessageList<PurchaseDec
 
 	@Override
 	public PurchaseDecisionMessage createNewObject(SocketMessage message) {
-		return new PurchaseDecisionMessage(message, max);
+		return new PurchaseDecisionMessage(message, getMax());
 	}
 
 }

@@ -18,7 +18,7 @@ public class SocketOutputWriter {
 			writer = new OutputStreamWriter(out);
 			writer.write(socketMessage.asJson() + "\n");
 			writer.flush();
-			System.out.println("\n[-->] " + TimeUtils.getCurrentTimeString() + ": " + socketMessage.getMessage());
+//			System.out.println("\n[-->] " + TimeUtils.getCurrentTimeString() + ": " + socketMessage.getMessage());
 		} catch (Exception e) {
 			System.err.println("Verbindung fehlgeschlagen!" + e.getMessage());
 		}

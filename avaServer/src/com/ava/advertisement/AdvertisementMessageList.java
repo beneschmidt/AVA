@@ -7,7 +7,6 @@ import com.ava.socket.SocketMessage;
 public class AdvertisementMessageList extends BusinessMessageList<AdvertisementMessage> {
 
 	private static AdvertisementMessageList instance;
-	private static final int max = 3;
 
 	private AdvertisementMessageList() {
 		messages = new LinkedList<>();
@@ -23,7 +22,7 @@ public class AdvertisementMessageList extends BusinessMessageList<AdvertisementM
 
 	@Override
 	public boolean iHeardThatAndIWonderedIfIShouldBuy(SocketMessage socketMessage) {
-		AdvertisementMessage newMessage = new AdvertisementMessage(socketMessage, max);
+		AdvertisementMessage newMessage = new AdvertisementMessage(socketMessage, getMax());
 		if (messages.contains(newMessage)) {
 			// walk through all the messages to find out which one should be updated
 			for (AdvertisementMessage nextMessage : messages) {
@@ -41,6 +40,6 @@ public class AdvertisementMessageList extends BusinessMessageList<AdvertisementM
 
 	@Override
 	public AdvertisementMessage createNewObject(SocketMessage message) {
-		return new AdvertisementMessage(message, max);
+		return new AdvertisementMessage(message, getMax());
 	}
 }

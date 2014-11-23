@@ -24,10 +24,12 @@ public class SocketInputReader extends Thread {
 
 	private Socket socket;
 	private Node node;
+	private BoughtItems boughtItems;
 
 	public SocketInputReader(Node node, Socket socket) {
 		this.socket = socket;
 		this.node = node;
+		boughtItems = BoughtItems.getInstance();
 	}
 
 	@Override
@@ -39,7 +41,7 @@ public class SocketInputReader extends Thread {
 			while ((inputLine = in.readLine()) != null) {
 				String currentTime = TimeUtils.getCurrentTimeString();
 				SocketMessage message = SocketMessage.fromJson(inputLine);
-				System.out.println("[<--] " + currentTime + ": " + message.getNode().getPort() + "=" + message.getMessage());
+				//				System.out.println("[<--] " + currentTime + ": " + message.getNode().getPort() + "=" + message.getMessage());
 
 				handleMessage(message);
 			}
@@ -98,21 +100,19 @@ public class SocketInputReader extends Thread {
 				break;
 			}
 			case advertisement: {
-				if (BoughtItems.getInstance().canIBuyThat(message)) {
+				if (boughtItems.canIBuyThat(message)) {
+					System.out.println("I can buy: " + message.getMessage());
 					boolean shouldBuy = AdvertisementMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
 					if (shouldBuy) {
-						BoughtItems.getInstance().itemBought(message);
-						node.broadcastMessage(message);
-						
-						AdvertisementMessageList.getInstance().clearHistoryForMessage(message);
 						try {
-							Socket socket = new Socket(message.getInitiator().getIp(), message.getInitiator().getPort());
-							SocketOutputWriter writer = new SocketOutputWriter();
-							SocketMessage newMessage = SocketMessageFactory.createUserMessage().setAction(SocketMessageAction.itemBought)
-									.setInitiator(node.getNodeDefinition()).setForwardingType(SocketMessageForwardingType.none)
-									.setNode(node.getNodeDefinition()).setMessage(message.getMessage());
-							writer.writeMessage(socket, newMessage);
-							socket.close();
+							boughtItems.itemBought(message);
+							System.out.println("I bought: " + message.getMessage() + " for the " + boughtItems.buyCount(message) + ". time");
+							node.broadcastMessage(message);
+
+							AdvertisementMessageList.getInstance().clearHistoryForMessage(message);
+							sendBoughtItemMessageToInitiator(message);
+						} catch (IndexOutOfBoundsException e) {
+							System.out.println("no shoving pls, can't buy more than " + boughtItems.getMax());
 						} catch (UnknownHostException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -120,44 +120,31 @@ public class SocketInputReader extends Thread {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+					} else {
+						System.out.println("I'm gonna tell my friends to buy: " + message.getMessage());
+						sendNeighbourMessage(message, SocketMessageAction.advertisement);
 					}
 				} else {
-					boolean shouldBuy = PurchaseDecisionMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
-					if (shouldBuy) {
-						BoughtItems.getInstance().itemBought(message);
-						PurchaseDecisionMessageList.getInstance().clearHistoryForMessage(message);
-						try {
-							Socket socket = new Socket(message.getInitiator().getIp(), message.getInitiator().getPort());
-							SocketOutputWriter writer = new SocketOutputWriter();
-							SocketMessage newMessage = SocketMessageFactory.createUserMessage().setAction(SocketMessageAction.itemBought)
-									.setInitiator(node.getNodeDefinition()).setForwardingType(SocketMessageForwardingType.none)
-									.setNode(node.getNodeDefinition()).setMessage(message.getMessage());
-							writer.writeMessage(socket, newMessage);
-							socket.close();
 
-							SocketMessage newPurchasedMessage = SocketMessageFactory.createUserMessage()
-									.setAction(SocketMessageAction.purchaseDecision)
-									.setInitiator(message.getInitiator())
-									.setForwardingType(SocketMessageForwardingType.broadcast)
-									.setNode(node.getNodeDefinition()).setMessage(message.getMessage());
-							node.broadcastMessage(newPurchasedMessage);
-						} catch (UnknownHostException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
 				}
 				break;
 			}
 			case purchaseDecision: {
-				boolean shouldBuy = AdvertisementMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
+				boolean shouldBuy = PurchaseDecisionMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
 				if (shouldBuy) {
-					// TODO kaufen und enstprechend reagieren
-				} else {
-					// TODO irgendwie weiterleiten
+					boughtItems.itemBought(message);
+					PurchaseDecisionMessageList.getInstance().clearHistoryForMessage(message);
+					try {
+						sendBoughtItemMessageToInitiator(message);
+
+						sendNeighbourMessage(message, SocketMessageAction.purchaseDecision);
+					} catch (UnknownHostException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 				break;
 			}
@@ -165,6 +152,21 @@ public class SocketInputReader extends Thread {
 				node.sendMessage(nextTargets, message);
 			}
 		}
+	}
+
+	private void sendBoughtItemMessageToInitiator(SocketMessage message) throws UnknownHostException, IOException {
+		Socket socket = new Socket(message.getInitiator().getIp(), message.getInitiator().getPort());
+		SocketOutputWriter writer = new SocketOutputWriter();
+		SocketMessage newMessage = SocketMessageFactory.createUserMessage().setAction(SocketMessageAction.itemBought).setInitiator(node.getNodeDefinition())
+				.setForwardingType(SocketMessageForwardingType.none).setNode(node.getNodeDefinition()).setMessage(message.getMessage());
+		writer.writeMessage(socket, newMessage);
+		socket.close();
+	}
+
+	private void sendNeighbourMessage(SocketMessage message, SocketMessageAction action) {
+		SocketMessage newPurchasedMessage = SocketMessageFactory.createUserMessage().setAction(action).setInitiator(message.getInitiator())
+				.setForwardingType(SocketMessageForwardingType.broadcast_without_sender).setNode(node.getNodeDefinition()).setMessage(message.getMessage());
+		node.broadcastMessage(newPurchasedMessage);
 	}
 
 	/**

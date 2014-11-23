@@ -4,6 +4,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.ava.advertisement.AdvertisementMessageList;
+import com.ava.advertisement.BoughtItems;
+import com.ava.advertisement.PurchaseDecisionMessageList;
 import com.ava.graph.NodeGraph;
 import com.ava.menu.MainMenu;
 import com.ava.menu.SimpleNodeSelectionMenu;
@@ -27,6 +30,10 @@ public class BusinessStartup {
 				System.out.println("usage: java -jar {jarname} {node definition file} {graph file} {optional: node-id}");
 			}
 
+			BoughtItems.getInstance().setMax(3);
+			AdvertisementMessageList.getInstance().setMax(3);
+			PurchaseDecisionMessageList.getInstance().setMax(3);
+
 			Map<Integer, NodeDefinition> nodes = NodeListReader.readNodeDefinitionsFromFile(args[0]);
 			NodeDefinition nodeDefinition = null;
 			if (args.length == 2) {
@@ -45,8 +52,8 @@ public class BusinessStartup {
 			SocketMessage socketMessage = SocketMessageFactory.createSystemMessage().setNode(node.getNodeDefinition())
 					.setMessage("hey I'm " + node.getNodeDefinition()).setAction(SocketMessageAction.simple);
 			node.broadcastMessage(socketMessage);
-			
-			if(node.getNodeDefinition().getNodeType()==NodeType.business){
+
+			if (node.getNodeDefinition().getNodeType() == NodeType.business) {
 				MainMenu mainMenu = new MainMenu(node);
 				mainMenu.run();
 			}

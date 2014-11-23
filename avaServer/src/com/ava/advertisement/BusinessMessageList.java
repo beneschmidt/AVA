@@ -4,17 +4,20 @@ import java.util.List;
 
 import com.ava.socket.SocketMessage;
 
-public abstract class BusinessMessageList<T extends BusinessMessage> {
+public abstract class BusinessMessageList<T extends BusinessMessage>  extends MaxValue{
 	protected List<T> messages;
 
 	public abstract boolean iHeardThatAndIWonderedIfIShouldBuy(SocketMessage socketMessage);
 
 	public void clearHistoryForMessage(SocketMessage message) {
-		int index = findIndexOfAd(message);
-		messages.remove(index);
+		T object = createNewObject(message);
+		int index = findIndexOfAd(object);
+		if (index != -1) {
+			messages.remove(index);
+		}
 	}
 
-	private int findIndexOfAd(SocketMessage message) {
+	private int findIndexOfAd(T message) {
 		int i = 0;
 		for (T nextMessage : messages) {
 			if (nextMessage.equals(message)) {
