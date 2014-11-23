@@ -2,6 +2,7 @@ package com.ava;
 
 import java.util.Map;
 
+import com.ava.menu.ObserverMenu;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
 import com.ava.node.NodeListReader;
@@ -24,12 +25,14 @@ public class ObserverStartup {
 		Node node = new Node(nodeDefinition);
 
 		node.startServerAsThread();
+
+		ObserverMenu menu = new ObserverMenu(node, nodes);
+		menu.run();
+
 		node.connectToOtherNodes(nodes.values());
 
 		SocketMessage socketMessage = SocketMessageFactory.createSystemMessage().setForwardingType(SocketMessageForwardingType.back_to_sender)
-				.setNode(node.getNodeDefinition())
-				.setMessage(args[1])
-				.setAction(SocketMessageAction.rumor_check);
+				.setNode(node.getNodeDefinition()).setMessage(args[1]).setAction(SocketMessageAction.rumor_check);
 		node.broadcastMessage(socketMessage);
 
 		RumorChecker rumorChecked = RumorChecker.getInstance();

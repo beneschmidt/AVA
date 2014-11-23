@@ -15,9 +15,11 @@ import com.ava.socket.SocketMessageFactory;
  */
 public class MainMenu implements Menu {
 	private enum MenuPoint {
-		new_product(7, "create new product and send it"), spread_rumor(6, "spread a rumor"), closeAllSockets(5, "close all sockets"), sendBroadcast(4,
-				"send a message to all sockets"), sendSingle(3, "send a message to a socket"), closeConeAndExit(2, "close connections and exit"), closeCon(1,
-				"close connections to other sockets");
+		closeCon(1, "close connections to other sockets"), closeConeAndExit(2, "close connections and exit"), sendSingle(3, "send a message to a socket"), sendBroadcast(
+				4, "send a message to all sockets"), closeAllSockets(5, "close all sockets"), spread_rumor(6, "spread a rumor"), new_product(7,
+				"create new product and send it");
+		
+		
 		private final int value;
 		private final String text;
 
@@ -34,16 +36,16 @@ public class MainMenu implements Menu {
 			return text;
 		}
 
-		public static MenuPoint getById(int id){
-			for(MenuPoint point : values()){
-				if(point.getValue()== id){
+		public static MenuPoint getById(int id) {
+			for (MenuPoint point : values()) {
+				if (point.getValue() == id) {
 					return point;
 				}
 			}
 			return null;
 		}
-		
-		public String toString(){
+
+		public String toString() {
 			return new StringBuilder().append(getValue()).append(") ").append(getText()).append("\n").toString();
 		}
 	}
@@ -119,10 +121,8 @@ public class MainMenu implements Menu {
 					String message = (String) messageMenu.run();
 					String realMessage = message;
 					SocketMessage socketMessage = SocketMessageFactory.createUserMessage().setAction(SocketMessageAction.advertisement)
-							.setForwardingType(SocketMessageForwardingType.broadcast_without_sender)
-							.setInitiator(node.getNodeDefinition())
-							.setNode(node.getNodeDefinition())
-							.setMessage(realMessage);
+							.setForwardingType(SocketMessageForwardingType.broadcast_without_sender).setInitiator(node.getNodeDefinition())
+							.setNode(node.getNodeDefinition()).setMessage(realMessage);
 					node.broadcastMessage(socketMessage);
 					break;
 				}
@@ -145,7 +145,7 @@ public class MainMenu implements Menu {
 				String inputLine = br.readLine();
 				Integer id = Integer.parseInt(inputLine);
 				MenuPoint menuPoint = MenuPoint.getById(id);
-				if (menuPoint!=null) {
+				if (menuPoint != null) {
 					return menuPoint;
 				} else {
 					System.out.println("Id not found! try again!");
