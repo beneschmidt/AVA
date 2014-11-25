@@ -1,5 +1,7 @@
 package com.ava;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -22,20 +24,20 @@ import com.ava.socket.SocketMessageFactory;
 import com.ava.utils.BusinessPropertiesReader;
 import com.ava.utils.FileReaderHelper;
 
+/**
+ * starting point for the business nodes scenarion. A business oder customer node is created and all neighbours are intially connected.
+ *
+ */
 public class BusinessStartup {
 
 	public static void main(String[] args) {
-		Node node = null;
 		try {
 			System.out.println("Arguments:" + Arrays.toString(args));
 			if (args.length < 2) {
 				System.out.println("usage: java -jar {jarname} {node definition file} {graph file} {optional: node-id}");
 			}
 
-			Properties businessProperties = BusinessPropertiesReader.readProperties();
-			BoughtItems.getInstance().setMax(Integer.parseInt(businessProperties.getProperty("maxBoughtItems")));
-			AdvertisementMessageList.getInstance().setMax(Integer.parseInt(businessProperties.getProperty("maxAd")));
-			PurchaseDecisionMessageList.getInstance().setMax(Integer.parseInt(businessProperties.getProperty("maxPurchase")));
+			initMaxValues();
 
 			Map<Integer, NodeDefinition> nodes = NodeListReader.readNodeDefinitionsFromFile(args[0]);
 			NodeDefinition nodeDefinition = null;
@@ -46,7 +48,7 @@ public class BusinessStartup {
 				nodeDefinition = nodes.get(Integer.parseInt(args[2]));
 			}
 			System.out.println("I am: " + nodeDefinition);
-			node = NodeFactory.createNode(nodeDefinition);
+			Node node = NodeFactory.createNode(nodeDefinition);
 			List<NodeDefinition> neighbours = loadOwnNeighboursFromFile(nodeDefinition.getId(), nodes, args[1]);
 			logNeighbours(neighbours);
 
@@ -63,6 +65,13 @@ public class BusinessStartup {
 		} catch (Exception e) {
 			System.err.println(e);
 		}
+	}
+
+	private static void initMaxValues() throws FileNotFoundException, IOException {
+		Properties businessProperties = BusinessPropertiesReader.readProperties();
+		BoughtItems.getInstance().setMax(Integer.parseInt(businessProperties.getProperty("maxBoughtItems")));
+		AdvertisementMessageList.getInstance().setMax(Integer.parseInt(businessProperties.getProperty("maxAd")));
+		PurchaseDecisionMessageList.getInstance().setMax(Integer.parseInt(businessProperties.getProperty("maxPurchase")));
 	}
 
 	private static void logNeighbours(List<NodeDefinition> neighbours) {

@@ -77,7 +77,7 @@ public class SocketInputReader extends Thread {
 				}
 				break;
 			}
-			case rumor_check: {
+			case checkRumor: {
 				Rumor rumor = Rumors.getInstance().getRumor(message.getMessage());
 				if (rumor != null) {
 					int rumorCount = rumor.getReceiveCount();
@@ -92,7 +92,7 @@ public class SocketInputReader extends Thread {
 				break;
 			}
 			case rumor_checked: {
-				RumorChecker.getInstance().rumorCheckedAtNode(message.getNode(), Boolean.valueOf(message.getMessage()));
+				RumorStatistics.getInstance().rumorCheckedAtNode(message.getNode(), Boolean.valueOf(message.getMessage()));
 				break;
 			}
 			case closed: {

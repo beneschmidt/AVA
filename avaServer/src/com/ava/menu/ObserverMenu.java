@@ -5,32 +5,42 @@ import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.ava.Statistics;
 import com.ava.advertisement.ItemStatistics;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
 import com.ava.node.NodeType;
-import com.ava.socket.RumorChecker;
+import com.ava.socket.RumorStatistics;
 import com.ava.socket.SocketMessage;
-import com.ava.socket.SocketMessage.SocketMessageAction;
 import com.ava.socket.SocketMessage.SocketMessageForwardingType;
 import com.ava.socket.SocketMessageFactory;
 import com.ava.utils.FileWriterHelper;
 
+/**
+ * special menu for observer. the user can specify which observer scenario should run
+ * @author D063416
+ *
+ */
 public class ObserverMenu implements Menu {
 
+	/**
+	 * enum for possible menu selections, containing an ID and a display text
+	 * @author D063416
+	 *
+	 */
 	private enum MenuPoint {
 		rumor(1, "Rumor observer"), business(2, "business observer"), exit(0, "exit");
 
-		private final int value;
+		private final int id;
 		private final String text;
 
 		private MenuPoint(int value, String text) {
-			this.value = value;
+			this.id = value;
 			this.text = text;
 		}
 
-		public int getValue() {
-			return value;
+		public int getId() {
+			return id;
 		}
 
 		public String getText() {
@@ -39,7 +49,7 @@ public class ObserverMenu implements Menu {
 
 		public static MenuPoint getById(int id) {
 			for (MenuPoint point : values()) {
-				if (point.getValue() == id) {
+				if (point.getId() == id) {
 					return point;
 				}
 			}
@@ -47,11 +57,12 @@ public class ObserverMenu implements Menu {
 		}
 
 		public String toString() {
-			return new StringBuilder().append(getValue()).append(") ").append(getText()).append("\n").toString();
+			return new StringBuilder().append(getId()).append(") ").append(getText()).append("\n").toString();
 		}
 	}
 
 	private Node node;
+	/** all neighbours of the node */
 	private Map<Integer, NodeDefinition> nodes;
 
 	public ObserverMenu(Node node, Map<Integer, NodeDefinition> nodes) {
@@ -63,32 +74,19 @@ public class ObserverMenu implements Menu {
 	public Object run() {
 		while (true) {
 			System.out.println(toString());
-			MenuPoint o = readInput();
-			handleInput(o);
+			MenuPoint menuPoint = readInput();
+			handleInput(menuPoint);
 		}
 	}
 
-	private void handleInput(MenuPoint o) {
-		switch (o) {
+	/**
+	 * acts according to the selected menu point. the system may be close through selecting the exit menu
+	 * @param menuPoint
+	 */
+	private void handleInput(MenuPoint menuPoint) {
+		switch (menuPoint) {
 			case rumor: {
-				node.connectToOtherNodes(nodes.values());
-				MessageMenu messageMenu = new MessageMenu();
-				String message = (String) messageMenu.run();
-
-				SocketMessage socketMessage = SocketMessageFactory.createSystemMessage().setForwardingType(SocketMessageForwardingType.back_to_sender)
-						.setNode(node.getNodeDefinition()).setMessage(message).setAction(SocketMessageAction.rumor_check);
-				node.broadcastMessage(socketMessage);
-
-				RumorChecker rumorChecked = RumorChecker.getInstance();
-				while (rumorChecked.getCheckedNodesCount() != node.getConnectedSockets().size()) {
-					System.out.println(rumorChecked.getCheckedNodesCount() + "/" + node.getConnectedSockets().size());
-				}
-
-				System.out.println(rumorChecked.getCheckedNodesCount() + "/" + node.getConnectedSockets().size());
-				FileWriterHelper helper = new FileWriterHelper("auswertung.txt");
-				helper.writeToFile(rumorChecked.toString());
-
-				node.closeAllConnections();
+				checkStatisticsAtNodesAndWriteToFile(RumorStatistics.getInstance(), nodes);
 				break;
 			}
 			case business: {
@@ -98,24 +96,7 @@ public class ObserverMenu implements Menu {
 						customers.put(node.getId(), node);
 					}
 				}
-
-				node.connectToOtherNodes(customers.values());
-				MessageMenu messageMenu = new MessageMenu();
-				String message = (String) messageMenu.run();
-
-				SocketMessage socketMessage = SocketMessageFactory.createSystemMessage().setForwardingType(SocketMessageForwardingType.back_to_sender)
-						.setNode(node.getNodeDefinition()).setMessage(message).setAction(SocketMessageAction.checkItemBought);
-				node.broadcastMessage(socketMessage);
-
-				ItemStatistics statistics = ItemStatistics.getInstance();
-				while (statistics.checkedNodesCount() != node.getConnectedSockets().size()) {
-					System.out.println(statistics.checkedNodesCount() + "/" + node.getConnectedSockets().size());
-				}
-				System.out.println(statistics.checkedNodesCount() + "/" + node.getConnectedSockets().size());
-				FileWriterHelper helper = new FileWriterHelper(message + "_itemStatistics.txt");
-				helper.writeToFile(statistics.toString());
-
-				node.closeAllConnections();
+				checkStatisticsAtNodesAndWriteToFile(ItemStatistics.getInstance(), customers);
 				break;
 			}
 			default: {
@@ -125,6 +106,33 @@ public class ObserverMenu implements Menu {
 				break;
 			}
 		}
+	}
+
+	/**
+	 * waits till all connected nodes are checked and then writes the statistics to a file. Finally all connections are closed
+	 */
+	private void checkStatisticsAtNodesAndWriteToFile(Statistics statistics, Map<Integer, NodeDefinition> nodes) {
+		node.connectToOtherNodes(nodes.values());
+
+		// ask for message to send to the nodes
+		MessageMenu messageMenu = new MessageMenu();
+		String message = (String) messageMenu.run();
+
+		// create new message
+		SocketMessage socketMessage = SocketMessageFactory.createSystemMessage().setForwardingType(SocketMessageForwardingType.back_to_sender)
+				.setNode(node.getNodeDefinition()).setMessage(message).setAction(statistics.getMessageAction());
+		node.broadcastMessage(socketMessage);
+
+		// wait till all nodes wrote back to the statistic singletons
+		while (statistics.checkedNodesCount() != node.getConnectedSockets().size()) {
+			System.out.println(statistics.checkedNodesCount() + "/" + node.getConnectedSockets().size());
+		}
+
+		System.out.println(statistics.checkedNodesCount() + "/" + node.getConnectedSockets().size());
+		FileWriterHelper helper = new FileWriterHelper(statistics.getFilePrefix() + "_" + message);
+		helper.writeToFile(statistics.toString());
+
+		node.closeAllConnections();
 	}
 
 	private MenuPoint readInput() {
@@ -156,5 +164,4 @@ public class ObserverMenu implements Menu {
 		}
 		return menu.toString();
 	}
-
 }

@@ -3,24 +3,27 @@ package com.ava.socket;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.ava.Statistics;
 import com.ava.node.NodeDefinition;
+import com.ava.socket.SocketMessage.SocketMessageAction;
 
 /**
- * Singleton to keep all nodes, that were checked for a specific rumor
+ * statistics for rumors that were send over the network. It is not running in an own thread, but uses the SINGLETON pattern, so only one object is targetet
+ * from other threads that may alter the information
  */
-public class RumorChecker {
+public class RumorStatistics implements Statistics {
 
-	private static RumorChecker instance;
+	private static RumorStatistics instance;
 
 	private Map<NodeDefinition, Boolean> rumorNodeMap;
 
-	private RumorChecker() {
+	private RumorStatistics() {
 		rumorNodeMap = new TreeMap<NodeDefinition, Boolean>();
 	}
 
-	public static RumorChecker getInstance() {
+	public static RumorStatistics getInstance() {
 		if (instance == null) {
-			instance = new RumorChecker();
+			instance = new RumorStatistics();
 		}
 		return instance;
 	}
@@ -29,7 +32,8 @@ public class RumorChecker {
 		rumorNodeMap.put(node, nodeBelievedIt);
 	}
 
-	public int getCheckedNodesCount() {
+	@Override
+	public int checkedNodesCount() {
 		return rumorNodeMap.size();
 	}
 
@@ -55,4 +59,13 @@ public class RumorChecker {
 		return string.toString();
 	}
 
+	@Override
+	public String getFilePrefix() {
+		return "rumorStatistics";
+	}
+
+	@Override
+	public SocketMessageAction getMessageAction() {
+		return SocketMessageAction.checkRumor;
+	}
 }
