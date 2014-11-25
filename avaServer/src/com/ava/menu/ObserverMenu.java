@@ -17,9 +17,7 @@ import com.ava.socket.SocketMessageFactory;
 import com.ava.utils.FileWriterHelper;
 
 /**
- * special menu for observer. the user can specify which observer scenario should run
- * @author D063416
- *
+ * special menu for observer. the user can choose which observer scenario should run
  */
 public class ObserverMenu implements Menu {
 
@@ -100,7 +98,6 @@ public class ObserverMenu implements Menu {
 				break;
 			}
 			default: {
-				node.closeAllConnections();
 				System.out.println("EXIT");
 				System.exit(0);
 				break;
@@ -129,7 +126,7 @@ public class ObserverMenu implements Menu {
 		}
 
 		System.out.println(statistics.checkedNodesCount() + "/" + node.getConnectedSockets().size());
-		FileWriterHelper helper = new FileWriterHelper(statistics.getFilePrefix() + "_" + message);
+		FileWriterHelper helper = new FileWriterHelper(statistics.getFilePrefix() + "_" + message + ".txt");
 		helper.writeToFile(statistics.toString());
 
 		node.closeAllConnections();

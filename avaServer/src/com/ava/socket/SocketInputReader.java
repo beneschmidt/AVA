@@ -149,11 +149,13 @@ public class SocketInputReader extends Thread {
 				break;
 			}
 			case itemBought: {
-				System.out.println("Someone bought the item: " + message.getMessage() + ", he's a new customer");
+				System.out.println(message.getNode().getId() + " bought an item: " + message.getMessage());
 				try {
-					node.connectionToNode(message.getNode());
+					if (!node.getConnectedSockets().containsKey(message.getNode())) {
+						node.connectionToNode(message.getNode());
+						System.out.println(message.getNode().getId() + " is a new customer");
+					}
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
