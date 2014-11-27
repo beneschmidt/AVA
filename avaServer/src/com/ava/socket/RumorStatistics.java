@@ -68,4 +68,9 @@ public class RumorStatistics implements Statistics {
 	public SocketMessageAction getMessageAction() {
 		return SocketMessageAction.checkRumor;
 	}
+
+	@Override
+	public void clear() {
+		rumorNodeMap.clear();
+	}
 }

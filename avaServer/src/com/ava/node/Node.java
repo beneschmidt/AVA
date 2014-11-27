@@ -60,22 +60,27 @@ public class Node implements NodeServer {
 	}
 
 	@Override
-	public void broadcastMessage(SocketMessage message) {
-		this.sendMessage(connectedSockets, message);
+	public int broadcastMessage(SocketMessage message) {
+		return this.sendMessage(connectedSockets, message);
 	}
 
-	public void sendMessage(Map<NodeDefinition, Socket> sockets, SocketMessage message) {
+	public int sendMessage(Map<NodeDefinition, Socket> sockets, SocketMessage message) {
+		int sendCount = 0;
 		SocketOutputWriter writer = new SocketOutputWriter();
 		for (Socket nextSocket : sockets.values()) {
-			writer.writeMessage(nextSocket, message);
+			boolean successful = writer.writeMessage(nextSocket, message);
+			if (successful) {
+				sendCount++;
+			}
 		}
+		return sendCount;
 	}
 
 	@Override
-	public void sendMessage(NodeDefinition nodeToSendMessage, SocketMessage message) {
+	public boolean sendMessage(NodeDefinition nodeToSendMessage, SocketMessage message) {
 		Socket socket = connectedSockets.get(nodeToSendMessage);
 		SocketOutputWriter writer = new SocketOutputWriter();
-		writer.writeMessage(socket, message);
+		return writer.writeMessage(socket, message);
 	}
 
 	public Map<NodeDefinition, Socket> getConnectedSockets() {

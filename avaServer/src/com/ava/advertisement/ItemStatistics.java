@@ -14,10 +14,10 @@ import com.ava.socket.SocketMessage.SocketMessageAction;
 public class ItemStatistics implements Statistics {
 	private static ItemStatistics instance;
 
-	private Map<NodeDefinition, Integer> rumorNodeMap;
+	private Map<NodeDefinition, Integer> itemNodeMap;
 
 	private ItemStatistics() {
-		rumorNodeMap = new TreeMap<NodeDefinition, Integer>();
+		itemNodeMap = new TreeMap<NodeDefinition, Integer>();
 	}
 
 	public static ItemStatistics getInstance() {
@@ -28,18 +28,18 @@ public class ItemStatistics implements Statistics {
 	}
 
 	public void itemsCheckedAtNode(NodeDefinition node, Integer count) {
-		rumorNodeMap.put(node, count);
+		itemNodeMap.put(node, count);
 	}
 
 	@Override
 	public int checkedNodesCount() {
-		return rumorNodeMap.size();
+		return itemNodeMap.size();
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder string = new StringBuilder();
-		for (Map.Entry<NodeDefinition, Integer> entry : rumorNodeMap.entrySet()) {
+		for (Map.Entry<NodeDefinition, Integer> entry : itemNodeMap.entrySet()) {
 			string.append(entry.getKey()).append(" = ").append(entry.getValue()).append("\n");
 		}
 		return string.toString();
@@ -53,5 +53,10 @@ public class ItemStatistics implements Statistics {
 	@Override
 	public SocketMessageAction getMessageAction() {
 		return SocketMessageAction.checkItemBought;
+	}
+
+	@Override
+	public void clear() {
+		itemNodeMap.clear();
 	}
 }

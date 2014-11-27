@@ -13,10 +13,18 @@ public class TimeUtils {
 		Date date = new Date(System.currentTimeMillis());
 		return sdf.format(date);
 	}
-	
+
 	public static String getCurrentTimeString() {
 		SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
 		Date date = new Date(System.currentTimeMillis());
 		return sdf.format(date);
+	}
+
+	public static void sleep(int sleepTime) {
+		try {
+			Thread.sleep(sleepTime);
+		} catch (InterruptedException e) {
+			System.err.println("ain't noboy got time fo dat");
+		}
 	}
 }

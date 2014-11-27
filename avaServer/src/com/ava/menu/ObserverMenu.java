@@ -15,6 +15,8 @@ import com.ava.socket.SocketMessage;
 import com.ava.socket.SocketMessage.SocketMessageForwardingType;
 import com.ava.socket.SocketMessageFactory;
 import com.ava.utils.FileWriterHelper;
+import com.ava.utils.TimeUtils;
+import com.ava.utils.ValueHelper;
 
 /**
  * special menu for observer. the user can choose which observer scenario should run
@@ -88,6 +90,8 @@ public class ObserverMenu implements Menu {
 				break;
 			}
 			case business: {
+
+				// TODO double count!!
 				Map<Integer, NodeDefinition> customers = new TreeMap<Integer, NodeDefinition>();
 				for (NodeDefinition node : nodes.values()) {
 					if (node.getNodeType() == NodeType.customer) {
@@ -118,18 +122,31 @@ public class ObserverMenu implements Menu {
 		// create new message
 		SocketMessage socketMessage = SocketMessageFactory.createSystemMessage().setForwardingType(SocketMessageForwardingType.back_to_sender)
 				.setNode(node.getNodeDefinition()).setMessage(message).setAction(statistics.getMessageAction());
-		node.broadcastMessage(socketMessage);
+		int s1 = node.broadcastMessage(socketMessage);
+		int sleepTime = 100;
+		TimeUtils.sleep(sleepTime);
+		int r1 = statistics.checkedNodesCount();
 
-		// wait till all nodes wrote back to the statistic singletons
-		while (statistics.checkedNodesCount() != node.getConnectedSockets().size()) {
+		statistics.clear();
+		int s2 = node.broadcastMessage(socketMessage);
+		TimeUtils.sleep(sleepTime);
+		int r2 = statistics.checkedNodesCount();
+
+		if (ValueHelper.allEqual(s1, r1, s2, r2)) {
 			System.out.println(statistics.checkedNodesCount() + "/" + node.getConnectedSockets().size());
+			FileWriterHelper helper = new FileWriterHelper(statistics.getFilePrefix() + "_" + message + ".txt");
+			helper.writeToFile(statistics.toString());
+
+			node.closeAllConnections();
+		} else {
+			System.out.println("Was soll ich hier machen?");
 		}
 
-		System.out.println(statistics.checkedNodesCount() + "/" + node.getConnectedSockets().size());
-		FileWriterHelper helper = new FileWriterHelper(statistics.getFilePrefix() + "_" + message + ".txt");
-		helper.writeToFile(statistics.toString());
+		//		// wait till all nodes wrote back to the statistic singletons
+		//		while (statistics.checkedNodesCount() != node.getConnectedSockets().size()) {
+		//			System.out.println(statistics.checkedNodesCount() + "/" + node.getConnectedSockets().size());
+		//		}
 
-		node.closeAllConnections();
 	}
 
 	private MenuPoint readInput() {

@@ -18,4 +18,6 @@ public interface Statistics {
 	 * @return SocketMessageAction that is send to the nodes
 	 */
 	public SocketMessageAction getMessageAction();
+
+	public void clear();
 }

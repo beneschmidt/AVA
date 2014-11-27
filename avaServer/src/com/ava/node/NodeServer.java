@@ -9,13 +9,13 @@ import com.ava.socket.SocketMessage;
  */
 public interface NodeServer {
 
-    void startServerAsThread();
+	void startServerAsThread();
 
-    void closeServer();
+	void closeServer();
 
-    void connectToOtherNodes(Collection<NodeDefinition> othersNodes);
+	void connectToOtherNodes(Collection<NodeDefinition> othersNodes);
 
-    void broadcastMessage(SocketMessage message);
-    
-    void sendMessage(NodeDefinition node, SocketMessage message);
+	int broadcastMessage(SocketMessage message);
+
+	boolean sendMessage(NodeDefinition node, SocketMessage message);
 }
