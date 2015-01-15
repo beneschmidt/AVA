@@ -101,7 +101,6 @@ public class SocketInputReader extends Thread {
 			}
 			case advertisement: {
 				if (alreadyBoughtItems.canIBuyThat(message)) {
-					System.out.println("I can buy: " + message.getMessage());
 					boolean shouldBuy = AdvertisementMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
 					if (shouldBuy) {
 						try {
@@ -234,7 +233,7 @@ public class SocketInputReader extends Thread {
 			case back_to_sender: {
 				Socket backSocket = null;
 				if (node.getConnectedSockets().containsKey(message.getNode())) {
-					backSocket = socket;
+					backSocket = node.getConnectedSockets().get(message.getNode());
 				} else {
 					try {
 						node.connectionToNode(message.getNode());

@@ -14,9 +14,10 @@ import com.ava.socket.RumorStatistics;
 import com.ava.socket.SocketMessage;
 import com.ava.socket.SocketMessage.SocketMessageForwardingType;
 import com.ava.socket.SocketMessageFactory;
+import com.ava.utils.DoubleCountHelper;
+import com.ava.utils.DoubleCountHelper.Count;
 import com.ava.utils.FileWriterHelper;
 import com.ava.utils.TimeUtils;
-import com.ava.utils.ValueHelper;
 
 /**
  * special menu for observer. the user can choose which observer scenario should run
@@ -122,25 +123,36 @@ public class ObserverMenu implements Menu {
 		// create new message
 		SocketMessage socketMessage = SocketMessageFactory.createSystemMessage().setForwardingType(SocketMessageForwardingType.back_to_sender)
 				.setNode(node.getNodeDefinition()).setMessage(message).setAction(statistics.getMessageAction());
+
+		// check outgoing and incoming for the first time
 		int s1 = node.broadcastMessage(socketMessage);
-		int sleepTime = 100;
+		int sleepTime = 200;
 		TimeUtils.sleep(sleepTime);
 		int r1 = statistics.checkedNodesCount();
 
-		statistics.clear();
-		int s2 = node.broadcastMessage(socketMessage);
-		TimeUtils.sleep(sleepTime);
-		int r2 = statistics.checkedNodesCount();
+		Count count = new Count(s1, r1);
+		DoubleCountHelper doubleCountHelper = new DoubleCountHelper();
+		doubleCountHelper.addCount(count);
 
-		if (ValueHelper.allEqual(s1, r1, s2, r2)) {
-			System.out.println(statistics.checkedNodesCount() + "/" + node.getConnectedSockets().size());
-			FileWriterHelper helper = new FileWriterHelper(statistics.getFilePrefix() + "_" + message + ".txt");
-			helper.writeToFile(statistics.toString());
+		// check again as long as the last two tests are not completely equal
+		boolean checkFinished = false;
+		while (!checkFinished) {
+			statistics.clear();
+			int send = node.broadcastMessage(socketMessage);
+			TimeUtils.sleep(sleepTime);
+			int received = statistics.checkedNodesCount();
 
-			node.closeAllConnections();
-		} else {
-			System.out.println("Was soll ich hier machen?");
+			Count nextCount = new Count(send, received);
+			doubleCountHelper.addCount(nextCount);
+			System.out.println(doubleCountHelper);
+			checkFinished = doubleCountHelper.allEqual();
 		}
+
+		System.out.println(statistics.checkedNodesCount() + "/" + node.getConnectedSockets().size());
+		FileWriterHelper helper = new FileWriterHelper(statistics.getFilePrefix() + "_" + message + ".txt");
+		helper.writeToFile(statistics.toString());
+
+		node.closeAllConnections();
 
 		//		// wait till all nodes wrote back to the statistic singletons
 		//		while (statistics.checkedNodesCount() != node.getConnectedSockets().size()) {

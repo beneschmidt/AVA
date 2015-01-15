@@ -12,9 +12,9 @@ import com.ava.socket.SocketMessage.SocketMessageAction;
  * from other threads that may alter the information
  */
 public class ItemStatistics implements Statistics {
-	private static ItemStatistics instance;
+	private volatile static ItemStatistics instance;
 
-	private Map<NodeDefinition, Integer> itemNodeMap;
+	private volatile Map<NodeDefinition, Integer> itemNodeMap;
 
 	private ItemStatistics() {
 		itemNodeMap = new TreeMap<NodeDefinition, Integer>();
