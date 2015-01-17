@@ -12,6 +12,7 @@ import com.ava.advertisement.AdvertisementMessageList;
 import com.ava.advertisement.BoughtItems;
 import com.ava.advertisement.ItemStatistics;
 import com.ava.advertisement.PurchaseDecisionMessageList;
+import com.ava.node.BusinessNode;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
 import com.ava.socket.SocketMessage.SocketMessageAction;
@@ -153,6 +154,16 @@ public class SocketInputReader extends Thread {
 					if (!node.getConnectedSockets().containsKey(message.getNode())) {
 						node.connectionToNode(message.getNode());
 						System.out.println(message.getNode().getId() + " is a new customer");
+					}
+					BusinessNode bNode = (BusinessNode) node;
+					Thread.sleep(1000);
+					if (bNode.getEtat() > 0) {
+						System.out.println("Still have " + bNode.getEtat() + ", going to spend it!");
+						SocketMessage socketMessage = SocketMessageFactory.createUserMessage().setAction(SocketMessageAction.advertisement)
+								.setForwardingType(SocketMessageForwardingType.broadcast_without_sender).setInitiator(node.getNodeDefinition())
+								.setNode(node.getNodeDefinition()).setMessage(message.getMessage());
+						node.broadcastMessage(socketMessage);
+						bNode.adPlaced();
 					}
 				} catch (Exception e) {
 					e.printStackTrace();

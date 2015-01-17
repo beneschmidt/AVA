@@ -4,10 +4,10 @@ import java.util.Random;
 
 public class BusinessNode extends Node {
 
-	public static final int MIN_ETAT = 10;
-	public static final int MAX_ETAT = 20;
+	public static final int MIN_ETAT = 3;
+	public static final int MAX_ETAT = 6;
 
-	private int etat;
+	private volatile int etat;
 
 	public BusinessNode(NodeDefinition nodeDefinition) {
 		super(nodeDefinition);
@@ -16,20 +16,20 @@ public class BusinessNode extends Node {
 		this.etat = randomNum;
 	}
 
-	public int getEtat() {
+	public synchronized int getEtat() {
 		return etat;
 	}
 
-	public void setEtat(int etat) {
+	public synchronized void setEtat(int etat) {
 		this.etat = etat;
 	}
-	
-	public void adPlaced(){
+
+	public synchronized void adPlaced() {
 		etat--;
 	}
-	
-	public boolean canIPlaceMoreAds(){
-		return etat>0;
+
+	public boolean canIPlaceMoreAds() {
+		return etat > 0;
 	}
 
 	@Override

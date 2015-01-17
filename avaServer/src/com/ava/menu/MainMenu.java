@@ -3,6 +3,7 @@ package com.ava.menu;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import com.ava.node.BusinessNode;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
 import com.ava.socket.SocketMessage;
@@ -18,8 +19,7 @@ public class MainMenu implements Menu {
 		closeCon(1, "close connections to other sockets"), closeConeAndExit(2, "close connections and exit"), sendSingle(3, "send a message to a socket"), sendBroadcast(
 				4, "send a message to all sockets"), closeAllSockets(5, "close all sockets"), spread_rumor(6, "spread a rumor"), new_product(7,
 				"create new product and send it");
-		
-		
+
 		private final int value;
 		private final String text;
 
@@ -117,13 +117,23 @@ public class MainMenu implements Menu {
 					break;
 				}
 				case new_product: {
-					MessageMenu messageMenu = new MessageMenu();
-					String message = (String) messageMenu.run();
-					String realMessage = message;
-					SocketMessage socketMessage = SocketMessageFactory.createUserMessage().setAction(SocketMessageAction.advertisement)
-							.setForwardingType(SocketMessageForwardingType.broadcast_without_sender).setInitiator(node.getNodeDefinition())
-							.setNode(node.getNodeDefinition()).setMessage(realMessage);
-					node.broadcastMessage(socketMessage);
+					if (node instanceof BusinessNode) {
+						BusinessNode bNode = (BusinessNode) node;
+						if (bNode.getEtat() <= 0) {
+							System.out.println("You don't have any etat");
+						} else {
+							MessageMenu messageMenu = new MessageMenu();
+							String message = (String) messageMenu.run();
+							String realMessage = message;
+							SocketMessage socketMessage = SocketMessageFactory.createUserMessage().setAction(SocketMessageAction.advertisement)
+									.setForwardingType(SocketMessageForwardingType.broadcast_without_sender).setInitiator(node.getNodeDefinition())
+									.setNode(node.getNodeDefinition()).setMessage(realMessage);
+							node.broadcastMessage(socketMessage);
+							bNode.adPlaced();
+						}
+					} else {
+						System.out.println("You can't start a campaign! You're not a business");
+					}
 					break;
 				}
 				default:

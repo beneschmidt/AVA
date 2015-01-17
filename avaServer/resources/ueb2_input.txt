@@ -1,11 +1,11 @@
 1 localhost:12001 business
 2 localhost:12002 business
 3 localhost:12003 business
-4 localhost:12004 business
+4 localhost:12004 customer
 5 localhost:12005 customer
 6 localhost:12006 customer
-7 localhost:12007 business
-8 localhost:12008 business
+7 localhost:12007 customer
+8 localhost:12008 customer
 9 localhost:12009 business
 10 localhost:12010 customer
 11 localhost:12011 customer
