@@ -144,13 +144,14 @@ public class ObserverMenu implements Menu {
 
 			Count nextCount = new Count(send, received);
 			doubleCountHelper.addCount(nextCount);
-			System.out.println(doubleCountHelper);
 			checkFinished = doubleCountHelper.allEqual();
 		}
 
-		System.out.println(statistics.checkedNodesCount() + "/" + node.getConnectedSockets().size());
 		FileWriterHelper helper = new FileWriterHelper(statistics.getFilePrefix() + "_" + message + ".txt");
-		helper.writeToFile(statistics.toString());
+		String statisticString = statistics.toString();
+		helper.writeToFile(statisticString);
+
+		System.out.println(statisticString);
 
 		node.closeAllConnections();
 

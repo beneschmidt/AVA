@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.ava.node.NodeDefinition;
+import com.ava.node.NodeType;
 
 /**
  * represents a complete node graph with all combinations based on a graph file
@@ -18,6 +19,11 @@ public class NodeGraph {
 	private List<GraphNodeCombination> combinations;
 	private Map<Integer, NodeDefinition> allNodes;
 
+	/**
+	 * from file
+	 * @param allNodes
+	 * @param rows
+	 */
 	public NodeGraph(Map<Integer, NodeDefinition> allNodes, List<String> rows) {
 		combinations = new LinkedList<>();
 		this.allNodes = allNodes;
@@ -27,9 +33,15 @@ public class NodeGraph {
 
 		combinations = loadCombinations(rows);
 	}
-	
-	public NodeGraph(List<GraphNodeCombination> combinations){
-		this.combinations=combinations;
+
+	/**
+	 * to file
+	 * @param combinations
+	 * @param allNodes
+	 */
+	public NodeGraph(List<GraphNodeCombination> combinations, Map<Integer, NodeDefinition> allNodes) {
+		this.combinations = combinations;
+		this.allNodes = allNodes;
 	}
 
 	private List<GraphNodeCombination> loadCombinations(List<String> rows) {
@@ -40,8 +52,6 @@ public class NodeGraph {
 				Integer key = Integer.parseInt(m.group(1));
 				Integer value = Integer.parseInt(m.group(2));
 				combinations.add(new GraphNodeCombination(key, value));
-			} else {
-				throw new RuntimeException("Kann String leider nicht parsen!" + nextRow);
 			}
 		}
 
@@ -69,12 +79,15 @@ public class NodeGraph {
 	public void setCombinations(List<GraphNodeCombination> combinations) {
 		this.combinations = combinations;
 	}
-	
+
 	@Override
 	public String toString() {
-		StringBuilder content = new StringBuilder()
-		.append("graph G {\n");
-		for(GraphNodeCombination nextComb : combinations){
+		StringBuilder content = new StringBuilder().append("graph G {\n");
+		for (NodeDefinition def : allNodes.values()) {
+			content.append("\"").append(def.getId()).append("\"").append(" [color=")
+					.append(def.getNodeType() == NodeType.business ? "greenyellow" : "firebrick").append("];\n");
+		}
+		for (GraphNodeCombination nextComb : combinations) {
 			content.append(nextComb.toString()).append("\n");
 		}
 		content.append("}");

@@ -33,12 +33,12 @@ public class GraphCreator {
 			Integer key = new Random().nextInt(nodeCount) + 1;
 			Integer value = new Random().nextInt(nodeCount) + 1;
 			GraphNodeCombination nextComb = new GraphNodeCombination(key, value);
-			if (key != value && !combinations.contains(nextComb) && nodes.get(value).getNodeType()==NodeType.customer) {
+			if (key != value && !combinations.contains(nextComb) && nodes.get(value).getNodeType() == NodeType.customer) {
 				combinations.add(nextComb);
 			}
 		}
 
-		NodeGraph graph = new NodeGraph(combinations);
+		NodeGraph graph = new NodeGraph(combinations, nodes);
 		FileWriterHelper helper = new FileWriterHelper("graph.gv");
 		helper.writeToFile(graph.toString());
 	}
