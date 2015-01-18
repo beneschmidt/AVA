@@ -11,6 +11,7 @@ import com.ava.advertisement.AdvertisementMessageList;
 import com.ava.advertisement.BoughtItems;
 import com.ava.advertisement.PurchaseDecisionMessageList;
 import com.ava.graph.NodeGraph;
+import com.ava.graph.GraphInformation;
 import com.ava.menu.MainMenu;
 import com.ava.menu.SimpleNodeSelectionMenu;
 import com.ava.node.Node;
@@ -48,8 +49,12 @@ public class BusinessStartup {
 				nodeDefinition = nodes.get(Integer.parseInt(args[2]));
 			}
 			System.out.println("I am: " + nodeDefinition);
+			NodeGraph graph = createNodeGraph(nodes, args[1]);
 			Node node = NodeFactory.createNode(nodeDefinition);
-			List<NodeDefinition> neighbours = loadOwnNeighboursFromFile(nodeDefinition.getId(), nodes, args[1]);
+			// singleton update
+			GraphInformation.getInstance().setFullGraph(graph);
+
+			List<NodeDefinition> neighbours = graph.getDefinitionsForNode(nodeDefinition.getId());
 			logNeighbours(neighbours);
 
 			node.startServerAsThread();
@@ -82,10 +87,10 @@ public class BusinessStartup {
 		System.out.println(string.toString());
 	}
 
-	private static List<NodeDefinition> loadOwnNeighboursFromFile(Integer ownId, Map<Integer, NodeDefinition> nodes, String fileName) {
+	private static NodeGraph createNodeGraph(Map<Integer, NodeDefinition> nodes, String fileName) {
 		FileReaderHelper helper = new FileReaderHelper(fileName);
 		List<String> fileContent = helper.readFileAsRows();
 		NodeGraph nodeGraph = new NodeGraph(nodes, fileContent);
-		return nodeGraph.getDefinitionsForNode(ownId);
+		return nodeGraph;
 	}
 }

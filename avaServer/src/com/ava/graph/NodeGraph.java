@@ -71,13 +71,40 @@ public class NodeGraph {
 		for (GraphNodeCombination nextCombination : combinations) {
 			if (nextCombination.getKey().equals(nodeId)) {
 				definitions.add(allNodes.get(nextCombination.getValue()));
+			} else if (nextCombination.getValue().equals(nodeId)) {
+				definitions.add(allNodes.get(nextCombination.getKey()));
 			}
 		}
 		return definitions;
 	}
 
+	/**
+	 * 
+	 * @param nodeId
+	 * @return all definitions except the already existing ones
+	 */
+	public List<NodeDefinition> getDefinitionsExceptForNode(Integer nodeId) {
+
+		List<NodeDefinition> all = new LinkedList<>();
+		for (NodeDefinition nextDef : allNodes.values()) {
+			all.add(nextDef);
+		}
+
+		List<NodeDefinition> existing = getDefinitionsForNode(nodeId);
+
+		for (NodeDefinition existingDef : existing) {
+			all.remove(existingDef);
+		}
+
+		return all;
+	}
+
 	public void setCombinations(List<GraphNodeCombination> combinations) {
 		this.combinations = combinations;
+	}
+
+	public void addCombination(GraphNodeCombination combination) {
+		this.combinations.add(combination);
 	}
 
 	@Override

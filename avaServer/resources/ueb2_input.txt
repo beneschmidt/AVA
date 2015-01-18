@@ -10,8 +10,8 @@
 10 localhost:12010 customer
 11 localhost:12011 customer
 12 localhost:12012 customer
-13 localhost:12013 business
-14 localhost:12014 business
+13 localhost:12013 customer
+14 localhost:12014 customer
 15 localhost:12015 business
 16 localhost:12016 customer
 17 localhost:12017 customer

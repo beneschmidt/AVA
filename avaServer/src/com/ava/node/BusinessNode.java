@@ -4,8 +4,8 @@ import java.util.Random;
 
 public class BusinessNode extends Node {
 
-	public static final int MIN_ETAT = 3;
-	public static final int MAX_ETAT = 6;
+	public static final int MIN_ETAT = 1;
+	public static final int MAX_ETAT = 1;
 
 	private volatile int etat;
 

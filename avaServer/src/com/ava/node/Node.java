@@ -18,7 +18,7 @@ import com.ava.utils.ResourceHelper;
 public class Node implements NodeServer {
 
 	private final NodeDefinition nodeDefinition;
-	private Map<NodeDefinition, Socket> connectedSockets;
+	private volatile Map<NodeDefinition, Socket> connectedSockets;
 	private ServerSocket serverSocket;
 
 	public Node(NodeDefinition nodeDefinition) {
@@ -64,13 +64,15 @@ public class Node implements NodeServer {
 		return this.sendMessage(connectedSockets, message);
 	}
 
-	public int sendMessage(Map<NodeDefinition, Socket> sockets, SocketMessage message) {
+	public synchronized int sendMessage(Map<NodeDefinition, Socket> sockets, SocketMessage message) {
 		int sendCount = 0;
 		SocketOutputWriter writer = new SocketOutputWriter();
-		for (Socket nextSocket : sockets.values()) {
-			boolean successful = writer.writeMessage(nextSocket, message);
-			if (successful) {
-				sendCount++;
+		synchronized (this) {
+			for (Socket nextSocket : sockets.values()) {
+				boolean successful = writer.writeMessage(nextSocket, message);
+				if (successful) {
+					sendCount++;
+				}
 			}
 		}
 		return sendCount;
@@ -117,8 +119,8 @@ public class Node implements NodeServer {
 
 	public void closeAllConnections() {
 		try {
-			SocketMessage socketMessage = SocketMessageFactory
-					.createSystemMessage(nodeDefinition, nodeDefinition, nodeDefinition + " goes offline", SocketMessageAction.closed);
+			SocketMessage socketMessage = SocketMessageFactory.createSystemMessage(nodeDefinition, nodeDefinition, nodeDefinition + " goes offline",
+					SocketMessageAction.closed);
 			SocketOutputWriter writer = new SocketOutputWriter();
 			for (Socket socket : connectedSockets.values()) {
 				writer.writeMessage(socket, socketMessage);
@@ -129,5 +131,4 @@ public class Node implements NodeServer {
 			System.out.println("Connections could not be closed properly. So sad.");
 		}
 	}
-
 }

@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ConcurrentModificationException;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -12,7 +14,10 @@ import com.ava.advertisement.AdvertisementMessageList;
 import com.ava.advertisement.BoughtItems;
 import com.ava.advertisement.ItemStatistics;
 import com.ava.advertisement.PurchaseDecisionMessageList;
+import com.ava.graph.GraphNodeCombination;
+import com.ava.graph.GraphInformation;
 import com.ava.node.BusinessNode;
+import com.ava.node.CustomerNode;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
 import com.ava.socket.SocketMessage.SocketMessageAction;
@@ -46,6 +51,7 @@ public class SocketInputReader extends Thread {
 
 				handleMessage(message);
 			}
+		} catch (ConcurrentModificationException e) {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -101,49 +107,48 @@ public class SocketInputReader extends Thread {
 				break;
 			}
 			case advertisement: {
-				if (alreadyBoughtItems.canIBuyThat(message)) {
-					boolean shouldBuy = AdvertisementMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
-					if (shouldBuy) {
-						try {
-							alreadyBoughtItems.itemBought(message);
-							System.out.println("I bought: " + message.getMessage() + " for the " + alreadyBoughtItems.buyCount(message) + ". time");
-							node.broadcastMessage(message);
+				if (node instanceof CustomerNode) {
+					if (alreadyBoughtItems.canIBuyThat(message)) {
+						boolean shouldBuy = AdvertisementMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
+						if (shouldBuy) {
+							try {
+								alreadyBoughtItems.itemBought(message);
+								System.out.println("I bought: " + message.getMessage() + " for the " + alreadyBoughtItems.buyCount(message) + ". time");
+								node.broadcastMessage(message);
 
-							AdvertisementMessageList.getInstance().clearHistoryForMessage(message);
-							sendBoughtItemMessageToInitiator(message);
-						} catch (IndexOutOfBoundsException e) {
-							System.out.println("no shoving pls, can't buy more than " + alreadyBoughtItems.getMax());
-						} catch (UnknownHostException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+								AdvertisementMessageList.getInstance().clearHistoryForMessage(message);
+								sendBoughtItemMessageToInitiator(message);
+								getNewNeighbourForNode(node);
+							} catch (IndexOutOfBoundsException e) {
+								System.out.println("no shoving pls, can't buy more than " + alreadyBoughtItems.getMax());
+							} catch (UnknownHostException e) {
+								e.printStackTrace();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						} else {
+							System.out.println("I'm gonna tell my friends to buy: " + message.getMessage());
+							sendNeighbourMessage(message, SocketMessageAction.advertisement);
 						}
-					} else {
-						System.out.println("I'm gonna tell my friends to buy: " + message.getMessage());
-						sendNeighbourMessage(message, SocketMessageAction.advertisement);
 					}
-				} else {
-
 				}
 				break;
 			}
 			case purchaseDecision: {
-				boolean shouldBuy = PurchaseDecisionMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
-				if (shouldBuy) {
-					alreadyBoughtItems.itemBought(message);
-					PurchaseDecisionMessageList.getInstance().clearHistoryForMessage(message);
-					try {
-						sendBoughtItemMessageToInitiator(message);
+				if (node instanceof CustomerNode) {
+					boolean shouldBuy = PurchaseDecisionMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
+					if (shouldBuy) {
+						alreadyBoughtItems.itemBought(message);
+						PurchaseDecisionMessageList.getInstance().clearHistoryForMessage(message);
+						try {
+							sendBoughtItemMessageToInitiator(message);
 
-						sendNeighbourMessage(message, SocketMessageAction.purchaseDecision);
-					} catch (UnknownHostException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+							sendNeighbourMessage(message, SocketMessageAction.purchaseDecision);
+						} catch (UnknownHostException e) {
+							e.printStackTrace();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					}
 				}
 				break;
@@ -184,6 +189,22 @@ public class SocketInputReader extends Thread {
 			default: {
 				node.sendMessage(nextTargets, message);
 			}
+		}
+	}
+
+	private void getNewNeighbourForNode(Node node) {
+		GraphInformation nodeInfo = GraphInformation.getInstance();
+		List<NodeDefinition> notExistingNodes = nodeInfo.getFullGraph().getDefinitionsExceptForNode(node.getNodeDefinition().getId());
+		try {
+			NodeDefinition newDef = notExistingNodes.get(0);
+			node.connectionToNode(newDef);
+			GraphNodeCombination newNeighbourCombination = new GraphNodeCombination(node.getNodeDefinition().getId(), newDef.getId());
+			nodeInfo.getFullGraph().addCombination(newNeighbourCombination);
+			System.out.println("NEW NEIGHBOUR: " + newDef);
+		} catch (IndexOutOfBoundsException e) {
+			// it's alright
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
