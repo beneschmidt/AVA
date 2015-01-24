@@ -107,6 +107,10 @@ public class NodeGraph {
 		this.combinations.add(combination);
 	}
 
+	public Map<Integer, NodeDefinition> getAllNodes() {
+		return allNodes;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder content = new StringBuilder().append("graph G {\n");

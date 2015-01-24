@@ -14,14 +14,17 @@ import com.ava.advertisement.AdvertisementMessageList;
 import com.ava.advertisement.BoughtItems;
 import com.ava.advertisement.ItemStatistics;
 import com.ava.advertisement.PurchaseDecisionMessageList;
-import com.ava.graph.GraphNodeCombination;
 import com.ava.graph.GraphInformation;
+import com.ava.graph.GraphNodeCombination;
 import com.ava.node.BusinessNode;
 import com.ava.node.CustomerNode;
+import com.ava.node.EchoStatus;
+import com.ava.node.EchoStatus.EchoColor;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
 import com.ava.socket.SocketMessage.SocketMessageAction;
 import com.ava.socket.SocketMessage.SocketMessageForwardingType;
+import com.ava.utils.EchoAnalysis;
 
 /**
  * Thread to read input from a socket and then handle it
@@ -45,10 +48,7 @@ public class SocketInputReader extends Thread {
 
 			String inputLine = "";
 			while ((inputLine = in.readLine()) != null) {
-				//				String currentTime = TimeUtils.getCurrentTimeString();
 				SocketMessage message = SocketMessage.fromJson(inputLine);
-				//				System.out.println("[<--] " + currentTime + ": " + message.getNode().getPort() + "=" + message.getMessage());
-
 				handleMessage(message);
 			}
 		} catch (ConcurrentModificationException e) {
@@ -185,9 +185,51 @@ public class SocketInputReader extends Thread {
 			}
 			case itemBoughtChecked: {
 				ItemStatistics.getInstance().itemsCheckedAtNode(message.getNode(), Integer.parseInt(message.getMessage()));
+				break;
+			}
+			case explorer: {
+				handleExplorerEcho(message, nextTargets);
+				break;
+			}
+			case echo: {
+				handleExplorerEcho(message, nextTargets);
+				break;
 			}
 			default: {
 				node.sendMessage(nextTargets, message);
+			}
+		}
+	}
+
+	private synchronized void handleExplorerEcho(SocketMessage message, Map<NodeDefinition, Socket> nextTargets) {
+		synchronized (node.getEchoStatus()) {
+			EchoStatus echoStatus = node.getEchoStatus();
+			echoStatus.increaseCount();
+			echoStatus.loadIds(message.getMessage());
+			echoStatus.addId(message.getNode().getId());
+			message.setMessage(echoStatus.getIds().toString());
+
+			if (echoStatus.getColor() == EchoColor.white) {
+				echoStatus.setColor(EchoColor.red);
+				echoStatus.setFirstNeighbour(message.getNode());
+				message.setNode(node.getNodeDefinition());
+				node.sendMessage(nextTargets, message);
+				System.out.println("Echo-Algo was initiated, now I'm red. All neighbours were informed");
+			}
+			System.out.println(message.getAction() + " from " + message.getNode().getId() + ", reached " + echoStatus.getCount() + "/"
+					+ node.getConnectedSockets().size());
+			if (node.getConnectedSockets().size() == echoStatus.getCount()) {
+				echoStatus.setColor(EchoColor.green);
+				System.out.println("All echos and explorer received, now I'm green");
+				if (echoStatus.isInitiator()) {
+					echoStatus.stopped();
+					System.out.println("FINISHED: " + new EchoAnalysis(echoStatus).toString());
+				} else {
+					message.setAction(SocketMessageAction.echo);
+					message.setNode(node.getNodeDefinition());
+					node.sendMessage(echoStatus.getFirstNeighbour(), message);
+					System.out.println("Send message back to " + echoStatus.getFirstNeighbour());
+				}
 			}
 		}
 	}
@@ -277,6 +319,7 @@ public class SocketInputReader extends Thread {
 					}
 				}
 				nextTargets.put(message.getNode(), backSocket);
+				break;
 			}
 			default: {
 				break;

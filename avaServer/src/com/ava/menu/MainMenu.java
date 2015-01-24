@@ -18,7 +18,7 @@ public class MainMenu implements Menu {
 	private enum MenuPoint {
 		closeCon(1, "close connections to other sockets"), closeConeAndExit(2, "close connections and exit"), sendSingle(3, "send a message to a socket"), sendBroadcast(
 				4, "send a message to all sockets"), closeAllSockets(5, "close all sockets"), spread_rumor(6, "spread a rumor"), new_product(7,
-				"create new product and send it");
+				"create new product and send it"), startEcho(8, "send echo");
 
 		private final int value;
 		private final String text;
@@ -134,6 +134,14 @@ public class MainMenu implements Menu {
 					} else {
 						System.out.println("You can't start a campaign! You're not a business");
 					}
+					break;
+				}
+				case startEcho: {
+					SocketMessage socketMessage = SocketMessageFactory.createUserMessage(node.getNodeDefinition(), node.getNodeDefinition(), node
+							.getNodeDefinition().getId() + "", SocketMessageAction.explorer);
+					socketMessage.setForwardingType(SocketMessageForwardingType.broadcast_without_sender);
+					node.getEchoStatus().initiated();
+					node.broadcastMessage(socketMessage);
 					break;
 				}
 				default:

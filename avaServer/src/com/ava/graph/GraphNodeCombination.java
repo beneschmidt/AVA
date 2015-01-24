@@ -22,7 +22,7 @@ public class GraphNodeCombination {
 
 	@Override
 	public String toString() {
-		return key +" -- "+value+";";
+		return key + " -- " + value + ";";
 	}
 
 	@Override
@@ -34,17 +34,13 @@ public class GraphNodeCombination {
 		if (getClass() != obj.getClass())
 			return false;
 		GraphNodeCombination other = (GraphNodeCombination) obj;
-		if (key == null) {
-			if (other.key != null)
-				return false;
-		} else if (!key.equals(other.key))
-			return false;
-		if (value == null) {
-			if (other.value != null)
-				return false;
-		} else if (!value.equals(other.value))
-			return false;
-		return true;
+		if (key == other.key && value == other.value) {
+			return true;
+		}
+		if (key == other.value && value == other.key) {
+			return true;
+		}
+		return false;
 	}
 
 }

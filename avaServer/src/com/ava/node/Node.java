@@ -20,10 +20,12 @@ public class Node implements NodeServer {
 	private final NodeDefinition nodeDefinition;
 	private volatile Map<NodeDefinition, Socket> connectedSockets;
 	private ServerSocket serverSocket;
+	private EchoStatus echoStatus;
 
 	public Node(NodeDefinition nodeDefinition) {
 		this.nodeDefinition = nodeDefinition;
 		this.connectedSockets = new TreeMap<>();
+		echoStatus = new EchoStatus();
 	}
 
 	public NodeDefinition getNodeDefinition() {
@@ -131,4 +133,13 @@ public class Node implements NodeServer {
 			System.out.println("Connections could not be closed properly. So sad.");
 		}
 	}
+
+	public EchoStatus getEchoStatus() {
+		return echoStatus;
+	}
+
+	public void setEchoStatus(EchoStatus echoStatus) {
+		this.echoStatus = echoStatus;
+	}
+
 }

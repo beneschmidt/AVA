@@ -71,11 +71,19 @@ public class NodeDefinition implements Comparable<NodeDefinition> {
 
 	@Override
 	public String toString() {
-		return nodeType.toString().toUpperCase()+" [id=" + id + ", ip=" + ip + ", port=" + port+"]";
+		return nodeType.toString().toUpperCase() + " [id=" + id + ", ip=" + ip + ", port=" + port + "]";
 	}
 
 	@Override
 	public int compareTo(NodeDefinition o) {
 		return getId().compareTo(o.getId());
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof NodeDefinition) {
+			return compareTo((NodeDefinition) obj) == 0;
+		}
+		return false;
 	}
 }
