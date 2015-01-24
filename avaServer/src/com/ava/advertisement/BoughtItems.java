@@ -10,7 +10,7 @@ import com.ava.socket.SocketMessage;
  * @author D063416
  *
  */
-public class BoughtItems extends MaxValue{
+public class BoughtItems extends MaxValue {
 
 	private static BoughtItems instance;
 
@@ -46,8 +46,8 @@ public class BoughtItems extends MaxValue{
 		}
 		return null;
 	}
-	
-	public int buyCount(SocketMessage message){
+
+	public int buyCount(SocketMessage message) {
 		BoughtItem item = new BoughtItem(message, getMax());
 		BoughtItem foundItem = getItemIfExists(item);
 		if (foundItem != null) {
@@ -61,7 +61,7 @@ public class BoughtItems extends MaxValue{
 		BoughtItem item = new BoughtItem(message, getMax());
 		BoughtItem foundItem = getItemIfExists(item);
 		if (foundItem != null && foundItem.getBoughtCount() >= getMax()) {
-			System.out.println("I can't buy that anymore, I already bought it "+foundItem.getBoughtCount()+". times");
+			//			System.out.println("I can't buy that anymore, I already bought it "+foundItem.getBoughtCount()+". times");
 			return false;
 		} else {
 			// null oder noch nicht alle gekauft

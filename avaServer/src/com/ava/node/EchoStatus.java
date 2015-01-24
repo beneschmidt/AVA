@@ -58,6 +58,7 @@ public class EchoStatus {
 	public void initiated() {
 		this.isInitiator = true;
 		this.startingTime = System.currentTimeMillis();
+		this.color = EchoColor.red;
 	}
 
 	public void stopped() {
@@ -103,6 +104,10 @@ public class EchoStatus {
 
 	public long timeInMilliseconds() {
 		return System.currentTimeMillis() - startingTime;
+	}
+
+	public boolean isClear() {
+		return (color == EchoColor.white && count == 0 && ids.size() == 0);
 	}
 
 }

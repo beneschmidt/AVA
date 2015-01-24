@@ -1,5 +1,6 @@
 package com.ava.utils;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -25,7 +26,7 @@ public class EchoAnalysis {
 		return echoStatus.getIds().size();
 	}
 
-	public Set<Integer> getReachedNodes() {
+	public Collection<Integer> getReachedNodes() {
 		return echoStatus.getIds().getValues();
 	}
 
@@ -46,7 +47,7 @@ public class EchoAnalysis {
 		return new TreeSet<Integer>(getReachedNodes());
 	}
 
-	private Object getNotReachedNodes() {
+	public Object getNotReachedNodes() {
 		Set<Integer> notReached = new TreeSet<>();
 		for (Integer id : GraphInformation.getInstance().getFullGraph().getAllNodes().keySet()) {
 			if (!getReachedNodes().contains(id)) {

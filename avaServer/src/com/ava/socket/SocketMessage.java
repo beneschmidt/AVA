@@ -22,7 +22,7 @@ public class SocketMessage {
 	}
 
 	public enum SocketMessageAction {
-		exit, rumor, simple, checkRumor, rumor_checked, closed, advertisement, purchaseDecision, itemBought, checkItemBought, itemBoughtChecked, explorer, echo;
+		exit, rumor, simple, checkRumor, rumor_checked, closed, advertisement, purchaseDecision, itemBought, checkItemBought, itemBoughtChecked, explorer, echo, clearEcho, connectToMe;
 	}
 
 	private SocketMessageSource source;

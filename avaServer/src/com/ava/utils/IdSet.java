@@ -1,28 +1,30 @@
 package com.ava.utils;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
 public class IdSet {
 
-	private Set<Integer> ids;
+	private List<Integer> ids;
 
 	public IdSet() {
-		ids = new LinkedHashSet<Integer>();
+		ids = new LinkedList<Integer>();
 	}
 
 	public void loadFromString(String idString) {
 		for (String nextString : idString.split(",")) {
 			Integer newId = Integer.parseInt(nextString);
-			ids.add(newId);
+			addId(newId);
 		}
 	}
 
 	public void addId(Integer id) {
-		ids.add(id);
+		if (!ids.contains(id)) {
+			ids.add(id);
+		}
 	}
 
-	public Set<Integer> getValues() {
+	public List<Integer> getValues() {
 		return ids;
 	}
 

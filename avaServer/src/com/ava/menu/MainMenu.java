@@ -140,6 +140,7 @@ public class MainMenu implements Menu {
 					SocketMessage socketMessage = SocketMessageFactory.createUserMessage(node.getNodeDefinition(), node.getNodeDefinition(), node
 							.getNodeDefinition().getId() + "", SocketMessageAction.explorer);
 					socketMessage.setForwardingType(SocketMessageForwardingType.broadcast_without_sender);
+					System.out.println("Starting ECHO algorithm, direct neighbours: " + node.getConnectedIds());
 					node.getEchoStatus().initiated();
 					node.broadcastMessage(socketMessage);
 					break;

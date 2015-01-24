@@ -52,6 +52,7 @@ public class SocketInputReader extends Thread {
 				handleMessage(message);
 			}
 		} catch (ConcurrentModificationException e) {
+			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -142,8 +143,8 @@ public class SocketInputReader extends Thread {
 						PurchaseDecisionMessageList.getInstance().clearHistoryForMessage(message);
 						try {
 							sendBoughtItemMessageToInitiator(message);
-
 							sendNeighbourMessage(message, SocketMessageAction.purchaseDecision);
+							getNewNeighbourForNode(node);
 						} catch (UnknownHostException e) {
 							e.printStackTrace();
 						} catch (IOException e) {
@@ -156,9 +157,16 @@ public class SocketInputReader extends Thread {
 			case itemBought: {
 				System.out.println(message.getNode().getId() + " bought an item: " + message.getMessage());
 				try {
-					if (!node.getConnectedSockets().containsKey(message.getNode())) {
-						node.connectionToNode(message.getNode());
-						System.out.println(message.getNode().getId() + " is a new customer");
+					synchronized (node.getConnectedSockets()) {
+						if (!node.getConnectedSockets().containsKey(message.getNode())) {
+							node.connectionToNode(message.getNode());
+							System.out.println(message.getNode().getId() + " is a new customer");
+							SocketMessage connectToMeMessage = SocketMessageFactory.createSystemMessage(node.getNodeDefinition(), node.getNodeDefinition(), "",
+									SocketMessageAction.connectToMe);
+							node.sendMessage(message.getNode(), connectToMeMessage);
+							GraphNodeCombination newNeighbourCombination = new GraphNodeCombination(node.getNodeDefinition().getId(), message.getNode().getId());
+							GraphInformation.getInstance().getFullGraph().addCombination(newNeighbourCombination);
+						}
 					}
 					BusinessNode bNode = (BusinessNode) node;
 					Thread.sleep(1000);
@@ -195,6 +203,29 @@ public class SocketInputReader extends Thread {
 				handleExplorerEcho(message, nextTargets);
 				break;
 			}
+			case clearEcho: {
+				synchronized (node.getEchoStatus()) {
+					if (!node.getEchoStatus().isClear()) {
+						node.getEchoStatus().clear();
+						System.out.println("Echo was cleared");
+						message.setNode(node.getNodeDefinition());
+						node.sendMessage(nextTargets, message);
+					}
+				}
+				break;
+			}
+			case connectToMe: {
+				try {
+					synchronized (node.getConnectedSockets()) {
+						if (!node.getConnectedSockets().containsKey(message.getNode())) {
+							node.connectionToNode(message.getNode());
+							System.out.println(message.getNode().getId() + " is a new neighbour");
+						}
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
 			default: {
 				node.sendMessage(nextTargets, message);
 			}
@@ -214,16 +245,23 @@ public class SocketInputReader extends Thread {
 				echoStatus.setFirstNeighbour(message.getNode());
 				message.setNode(node.getNodeDefinition());
 				node.sendMessage(nextTargets, message);
-				System.out.println("Echo-Algo was initiated, now I'm red. All neighbours were informed");
+				System.out.println("Echo-Algo was initiated by " + echoStatus.getFirstNeighbour().getId() + ", now I'm red. All neighbours were informed");
 			}
 			System.out.println(message.getAction() + " from " + message.getNode().getId() + ", reached " + echoStatus.getCount() + "/"
-					+ node.getConnectedSockets().size());
+					+ node.getConnectedSockets().size() + ", ids so far: " + echoStatus.getIds().toString());
 			if (node.getConnectedSockets().size() == echoStatus.getCount()) {
 				echoStatus.setColor(EchoColor.green);
 				System.out.println("All echos and explorer received, now I'm green");
 				if (echoStatus.isInitiator()) {
+					// stop echo and analyse
 					echoStatus.stopped();
 					System.out.println("FINISHED: " + new EchoAnalysis(echoStatus).toString());
+
+					// now clear echo on all nodes
+					echoStatus.clear();
+					SocketMessage socketMessage = SocketMessageFactory.createForwardingSystemMessage(node.getNodeDefinition(),
+							SocketMessageForwardingType.broadcast_without_sender, node.getNodeDefinition(), "", SocketMessageAction.clearEcho);
+					node.broadcastMessage(socketMessage);
 				} else {
 					message.setAction(SocketMessageAction.echo);
 					message.setNode(node.getNodeDefinition());
@@ -236,17 +274,22 @@ public class SocketInputReader extends Thread {
 
 	private void getNewNeighbourForNode(Node node) {
 		GraphInformation nodeInfo = GraphInformation.getInstance();
-		List<NodeDefinition> notExistingNodes = nodeInfo.getFullGraph().getDefinitionsExceptForNode(node.getNodeDefinition().getId());
-		try {
-			NodeDefinition newDef = notExistingNodes.get(0);
-			node.connectionToNode(newDef);
-			GraphNodeCombination newNeighbourCombination = new GraphNodeCombination(node.getNodeDefinition().getId(), newDef.getId());
-			nodeInfo.getFullGraph().addCombination(newNeighbourCombination);
-			System.out.println("NEW NEIGHBOUR: " + newDef);
-		} catch (IndexOutOfBoundsException e) {
-			// it's alright
-		} catch (Exception e) {
-			e.printStackTrace();
+		synchronized (node.getConnectedSockets()) {
+			List<NodeDefinition> notExistingNodes = nodeInfo.getFullGraph().getDefinitionsExceptForNode(node.getNodeDefinition().getId());
+			try {
+				NodeDefinition newDef = notExistingNodes.get(0);
+				node.connectionToNode(newDef);
+				SocketMessage connectToMeMessage = SocketMessageFactory.createSystemMessage(node.getNodeDefinition(), node.getNodeDefinition(), "",
+						SocketMessageAction.connectToMe);
+				node.sendMessage(newDef, connectToMeMessage);
+				GraphNodeCombination newNeighbourCombination = new GraphNodeCombination(node.getNodeDefinition().getId(), newDef.getId());
+				nodeInfo.getFullGraph().addCombination(newNeighbourCombination);
+				System.out.println("NEW NEIGHBOUR: " + newDef);
+			} catch (IndexOutOfBoundsException e) {
+				// it's alright
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -281,9 +324,11 @@ public class SocketInputReader extends Thread {
 				break;
 			}
 			case broadcast_without_sender: {
-				for (Map.Entry<NodeDefinition, Socket> nextEntry : node.getConnectedSockets().entrySet()) {
-					if (!nextEntry.getKey().equals(message.getNode())) {
-						nextTargets.put(nextEntry.getKey(), nextEntry.getValue());
+				synchronized (node.getConnectedSockets()) {
+					for (Map.Entry<NodeDefinition, Socket> nextEntry : node.getConnectedSockets().entrySet()) {
+						if (!nextEntry.getKey().equals(message.getNode())) {
+							nextTargets.put(nextEntry.getKey(), nextEntry.getValue());
+						}
 					}
 				}
 				break;

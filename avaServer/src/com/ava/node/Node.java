@@ -5,6 +5,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -55,6 +57,14 @@ public class Node implements NodeServer {
 		}
 	}
 
+	public List<Integer> getConnectedIds() {
+		List<Integer> ids = new LinkedList<>();
+		for (NodeDefinition def : getConnectedSockets().keySet()) {
+			ids.add(def.getId());
+		}
+		return ids;
+	}
+
 	public void connectionToNode(NodeDefinition nextDef) throws UnknownHostException, IOException {
 		Socket socket = new Socket(nextDef.getIp(), nextDef.getPort());
 		connectedSockets.put(nextDef, socket);
@@ -66,10 +76,10 @@ public class Node implements NodeServer {
 		return this.sendMessage(connectedSockets, message);
 	}
 
-	public synchronized int sendMessage(Map<NodeDefinition, Socket> sockets, SocketMessage message) {
+	public int sendMessage(Map<NodeDefinition, Socket> sockets, SocketMessage message) {
 		int sendCount = 0;
 		SocketOutputWriter writer = new SocketOutputWriter();
-		synchronized (this) {
+		synchronized (sockets) {
 			for (Socket nextSocket : sockets.values()) {
 				boolean successful = writer.writeMessage(nextSocket, message);
 				if (successful) {
