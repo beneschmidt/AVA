@@ -12,6 +12,7 @@ import java.util.TreeMap;
 
 import com.ava.advertisement.AdvertisementMessageList;
 import com.ava.advertisement.BoughtItems;
+import com.ava.advertisement.BusinessMessageList;
 import com.ava.advertisement.ItemStatistics;
 import com.ava.advertisement.PurchaseDecisionMessageList;
 import com.ava.graph.GraphInformation;
@@ -34,6 +35,7 @@ public class SocketInputReader extends Thread {
 	private Socket socket;
 	private Node node;
 	private BoughtItems alreadyBoughtItems;
+	private Object lockObject = new Object();
 
 	public SocketInputReader(Node node, Socket socket) {
 		this.socket = socket;
@@ -49,7 +51,9 @@ public class SocketInputReader extends Thread {
 			String inputLine = "";
 			while ((inputLine = in.readLine()) != null) {
 				SocketMessage message = SocketMessage.fromJson(inputLine);
-				handleMessage(message);
+				synchronized (lockObject) {
+					handleMessage(message);
+				}
 			}
 		} catch (ConcurrentModificationException e) {
 			e.printStackTrace();
@@ -108,50 +112,11 @@ public class SocketInputReader extends Thread {
 				break;
 			}
 			case advertisement: {
-				if (node instanceof CustomerNode) {
-					if (alreadyBoughtItems.canIBuyThat(message)) {
-						boolean shouldBuy = AdvertisementMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
-						if (shouldBuy) {
-							try {
-								alreadyBoughtItems.itemBought(message);
-								System.out.println("I bought: " + message.getMessage() + " for the " + alreadyBoughtItems.buyCount(message) + ". time");
-								node.broadcastMessage(message);
-
-								AdvertisementMessageList.getInstance().clearHistoryForMessage(message);
-								sendBoughtItemMessageToInitiator(message);
-								getNewNeighbourForNode(node);
-							} catch (IndexOutOfBoundsException e) {
-								System.out.println("no shoving pls, can't buy more than " + alreadyBoughtItems.getMax());
-							} catch (UnknownHostException e) {
-								e.printStackTrace();
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
-						} else {
-							System.out.println("I'm gonna tell my friends to buy: " + message.getMessage());
-							sendNeighbourMessage(message, SocketMessageAction.advertisement);
-						}
-					}
-				}
+				reactToBusinessMessage(message, AdvertisementMessageList.getInstance());
 				break;
 			}
 			case purchaseDecision: {
-				if (node instanceof CustomerNode) {
-					boolean shouldBuy = PurchaseDecisionMessageList.getInstance().iHeardThatAndIWonderedIfIShouldBuy(message);
-					if (shouldBuy) {
-						alreadyBoughtItems.itemBought(message);
-						PurchaseDecisionMessageList.getInstance().clearHistoryForMessage(message);
-						try {
-							sendBoughtItemMessageToInitiator(message);
-							sendNeighbourMessage(message, SocketMessageAction.purchaseDecision);
-							getNewNeighbourForNode(node);
-						} catch (UnknownHostException e) {
-							e.printStackTrace();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-				}
+				reactToBusinessMessage(message, PurchaseDecisionMessageList.getInstance());
 				break;
 			}
 			case itemBought: {
@@ -232,6 +197,43 @@ public class SocketInputReader extends Thread {
 		}
 	}
 
+	/**
+	 * check if I'm a customer node, then check if I can still buy items, then check if I should buy item (depends on how much messages of that type I already got),
+	 * then comes the big part: buy item, clear message list for that type, inform seller, send purchase decision to neighbours and get a new neighbour
+	 * Also possibly advertise to neighbours if needed
+	 * @param message
+	 * @param list
+	 */
+	@SuppressWarnings("rawtypes")
+	private void reactToBusinessMessage(SocketMessage message, BusinessMessageList list) {
+		if (node instanceof CustomerNode) {
+			synchronized (alreadyBoughtItems) {
+				if (alreadyBoughtItems.canIBuyThat(message)) {
+					boolean shouldBuy = list.iHeardThatAndIWonderedIfIShouldBuy(message);
+					if (shouldBuy) {
+						try {
+							alreadyBoughtItems.itemBought(message);
+							list.clearHistoryForMessage(message);
+							sendBoughtItemMessageToInitiator(message);
+							System.out.println("I bought: " + message.getMessage() + " for the " + alreadyBoughtItems.buyCount(message) + ". time");
+							sendNeighbourMessage(message, SocketMessageAction.purchaseDecision);
+							getNewNeighbourForNode(node);
+						} catch (IndexOutOfBoundsException e) {
+							System.out.println("no shoving pls, can't buy more than " + alreadyBoughtItems.getMax());
+						} catch (UnknownHostException e) {
+							e.printStackTrace();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					} else if (list.shouldIAdvertiseFurtherMore()) {
+						//						System.out.println("I'm gonna tell my friends to buy: " + message.getMessage() + ", " + list.currentCount(message));
+						sendNeighbourMessage(message, SocketMessageAction.advertisement);
+					}
+				}
+			}
+		}
+	}
+
 	private synchronized void handleExplorerEcho(SocketMessage message, Map<NodeDefinition, Socket> nextTargets) {
 		synchronized (node.getEchoStatus()) {
 			EchoStatus echoStatus = node.getEchoStatus();
@@ -285,8 +287,6 @@ public class SocketInputReader extends Thread {
 				GraphNodeCombination newNeighbourCombination = new GraphNodeCombination(node.getNodeDefinition().getId(), newDef.getId());
 				nodeInfo.getFullGraph().addCombination(newNeighbourCombination);
 				System.out.println("NEW NEIGHBOUR: " + newDef);
-			} catch (IndexOutOfBoundsException e) {
-				// it's alright
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

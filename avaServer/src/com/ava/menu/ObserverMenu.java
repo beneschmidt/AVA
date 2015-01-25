@@ -91,8 +91,6 @@ public class ObserverMenu implements Menu {
 				break;
 			}
 			case business: {
-
-				// TODO double count!!
 				Map<Integer, NodeDefinition> customers = new TreeMap<Integer, NodeDefinition>();
 				for (NodeDefinition node : nodes.values()) {
 					if (node.getNodeType() == NodeType.customer) {
@@ -154,12 +152,6 @@ public class ObserverMenu implements Menu {
 		System.out.println(statisticString);
 
 		node.closeAllConnections();
-
-		//		// wait till all nodes wrote back to the statistic singletons
-		//		while (statistics.checkedNodesCount() != node.getConnectedSockets().size()) {
-		//			System.out.println(statistics.checkedNodesCount() + "/" + node.getConnectedSockets().size());
-		//		}
-
 	}
 
 	private MenuPoint readInput() {

@@ -1,11 +1,13 @@
 package com.ava.advertisement;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import com.ava.socket.SocketMessage;
 
 public class PurchaseDecisionMessageList extends BusinessMessageList<PurchaseDecisionMessage> {
 
+	List<PurchaseDecisionMessage> messages;
 	private static PurchaseDecisionMessageList instance;
 
 	private PurchaseDecisionMessageList() {
@@ -20,26 +22,18 @@ public class PurchaseDecisionMessageList extends BusinessMessageList<PurchaseDec
 	}
 
 	@Override
-	public boolean iHeardThatAndIWonderedIfIShouldBuy(SocketMessage socketMessage) {
-		PurchaseDecisionMessage newMessage = new PurchaseDecisionMessage(socketMessage, getMax());
-		if (messages.contains(newMessage)) {
-			// walk through all the messages to find out which one should be updated
-			for (PurchaseDecisionMessage nextMessage : messages) {
-				if (nextMessage.equals(newMessage)) {
-					nextMessage.newMessageArrived();
-					return nextMessage.shouldItBeBought();
-				}
-			}
-		} else {
-			messages.add(newMessage);
-			return newMessage.shouldItBeBought();
-		}
+	public PurchaseDecisionMessage createNewObject(SocketMessage message) {
+		return new PurchaseDecisionMessage(message, getMax());
+	}
+
+	@Override
+	public boolean shouldIAdvertiseFurtherMore() {
 		return false;
 	}
 
 	@Override
-	public PurchaseDecisionMessage createNewObject(SocketMessage message) {
-		return new PurchaseDecisionMessage(message, getMax());
+	public List<PurchaseDecisionMessage> getMessages() {
+		return messages;
 	}
 
 }

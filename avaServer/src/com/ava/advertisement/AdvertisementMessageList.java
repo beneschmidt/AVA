@@ -1,10 +1,12 @@
 package com.ava.advertisement;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import com.ava.socket.SocketMessage;
 
 public class AdvertisementMessageList extends BusinessMessageList<AdvertisementMessage> {
+	private List<AdvertisementMessage> messages;
 
 	private static AdvertisementMessageList instance;
 
@@ -21,25 +23,17 @@ public class AdvertisementMessageList extends BusinessMessageList<AdvertisementM
 	}
 
 	@Override
-	public boolean iHeardThatAndIWonderedIfIShouldBuy(SocketMessage socketMessage) {
-		AdvertisementMessage newMessage = new AdvertisementMessage(socketMessage, getMax());
-		if (messages.contains(newMessage)) {
-			// walk through all the messages to find out which one should be updated
-			for (AdvertisementMessage nextMessage : messages) {
-				if (nextMessage.equals(newMessage)) {
-					nextMessage.newMessageArrived();
-					return nextMessage.shouldItBeBought();
-				}
-			}
-		} else {
-			messages.add(newMessage);
-			return newMessage.shouldItBeBought();
-		}
-		return false;
+	public AdvertisementMessage createNewObject(SocketMessage message) {
+		return new AdvertisementMessage(message, getMax());
 	}
 
 	@Override
-	public AdvertisementMessage createNewObject(SocketMessage message) {
-		return new AdvertisementMessage(message, getMax());
+	public boolean shouldIAdvertiseFurtherMore() {
+		return true;
+	}
+
+	@Override
+	public List<AdvertisementMessage> getMessages() {
+		return messages;
 	}
 }
