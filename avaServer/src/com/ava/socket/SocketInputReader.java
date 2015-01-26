@@ -8,6 +8,7 @@ import java.net.UnknownHostException;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 
 import com.ava.advertisement.AdvertisementMessageList;
@@ -279,7 +280,9 @@ public class SocketInputReader extends Thread {
 		synchronized (node.getConnectedSockets()) {
 			List<NodeDefinition> notExistingNodes = nodeInfo.getFullGraph().getDefinitionsExceptForNode(node.getNodeDefinition().getId());
 			try {
-				NodeDefinition newDef = notExistingNodes.get(0);
+				Random rand = new Random();
+				int randomNum = rand.nextInt(notExistingNodes.size());
+				NodeDefinition newDef = notExistingNodes.get(randomNum);
 				node.connectionToNode(newDef);
 				SocketMessage connectToMeMessage = SocketMessageFactory.createSystemMessage(node.getNodeDefinition(), node.getNodeDefinition(), "",
 						SocketMessageAction.connectToMe);
