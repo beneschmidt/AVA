@@ -24,9 +24,11 @@ import com.ava.node.EchoStatus;
 import com.ava.node.EchoStatus.EchoColor;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
+import com.ava.node.NodeType;
 import com.ava.socket.SocketMessage.SocketMessageAction;
 import com.ava.socket.SocketMessage.SocketMessageForwardingType;
 import com.ava.utils.EchoAnalysis;
+import com.ava.utils.ResourceHelper;
 
 /**
  * Thread to read input from a socket and then handle it
@@ -36,7 +38,6 @@ public class SocketInputReader extends Thread {
 	private Socket socket;
 	private Node node;
 	private BoughtItems alreadyBoughtItems;
-	private Object lockObject = new Object();
 
 	public SocketInputReader(Node node, Socket socket) {
 		this.socket = socket;
@@ -52,9 +53,12 @@ public class SocketInputReader extends Thread {
 			String inputLine = "";
 			while ((inputLine = in.readLine()) != null) {
 				SocketMessage message = SocketMessage.fromJson(inputLine);
-				synchronized (lockObject) {
-					handleMessage(message);
+				synchronized (SocketMessageCounter.getInstance()) {
+					if (message.getNode().getNodeType() != NodeType.observer) {
+						SocketMessageCounter.getInstance().received();
+					}
 				}
+				handleMessage(message);
 			}
 		} catch (ConcurrentModificationException e) {
 			e.printStackTrace();
@@ -150,10 +154,8 @@ public class SocketInputReader extends Thread {
 			}
 			case checkItemBought: {
 				int buyCount = alreadyBoughtItems.buyCount(message);
-				message.setMessage(buyCount + "");
-				message.setNode(node.getNodeDefinition());
-				message.setAction(SocketMessageAction.itemBoughtChecked);
-				message.setForwardingType(SocketMessageForwardingType.none);
+				message.setMessage(buyCount + "").setNode(node.getNodeDefinition()).setAction(SocketMessageAction.itemBoughtChecked)
+						.setForwardingType(SocketMessageForwardingType.none);
 				node.sendMessage(nextTargets, message);
 				break;
 			}
@@ -191,6 +193,38 @@ public class SocketInputReader extends Thread {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+				break;
+			}
+			case checkMessageCount: {
+				NodeDefinition backNode = message.getNode();
+				String sendReceived = SocketMessageCounter.getInstance().getSendMessages() + "," + SocketMessageCounter.getInstance().getReceivedMessages();
+				message.setMessage(sendReceived).setNode(node.getNodeDefinition()).setAction(SocketMessageAction.messageCountChecked)
+						.setForwardingType(SocketMessageForwardingType.none);
+				Socket socket = null;
+				try {
+					socket = new Socket(backNode.getIp(), backNode.getPort());
+					Map<NodeDefinition, Socket> back = new TreeMap<>();
+					back.put(message.getNode(), socket);
+					node.sendMessage(back, message);
+					socket.close();
+				} catch (Exception e) {
+					e.printStackTrace();
+				} finally {
+					ResourceHelper.close(socket);
+				}
+				break;
+			}
+			case messageCountChecked: {
+				String[] cut = message.getMessage().split(",");
+				TerminationCounter.getInstance().addSendMessages(Integer.parseInt(cut[0]));
+				TerminationCounter.getInstance().addReceivedMessages(Integer.parseInt(cut[1]));
+				break;
+			}
+			case listNeighbours: {
+				for (NodeDefinition def : node.getConnectedSockets().keySet()) {
+					System.out.println(def.getId() + ": " + def.getNodeType());
+				}
+				break;
 			}
 			default: {
 				node.sendMessage(nextTargets, message);
@@ -279,30 +313,38 @@ public class SocketInputReader extends Thread {
 		GraphInformation nodeInfo = GraphInformation.getInstance();
 		synchronized (node.getConnectedSockets()) {
 			List<NodeDefinition> notExistingNodes = nodeInfo.getFullGraph().getDefinitionsExceptForNode(node.getNodeDefinition().getId());
-			try {
-				Random rand = new Random();
-				int randomNum = rand.nextInt(notExistingNodes.size());
-				NodeDefinition newDef = notExistingNodes.get(randomNum);
-				node.connectionToNode(newDef);
-				SocketMessage connectToMeMessage = SocketMessageFactory.createSystemMessage(node.getNodeDefinition(), node.getNodeDefinition(), "",
-						SocketMessageAction.connectToMe);
-				node.sendMessage(newDef, connectToMeMessage);
-				GraphNodeCombination newNeighbourCombination = new GraphNodeCombination(node.getNodeDefinition().getId(), newDef.getId());
-				nodeInfo.getFullGraph().addCombination(newNeighbourCombination);
-				System.out.println("NEW NEIGHBOUR: " + newDef);
-			} catch (Exception e) {
-				e.printStackTrace();
+			if (notExistingNodes.size() != 0) {
+				try {
+					Random rand = new Random();
+					int randomNum = rand.nextInt(notExistingNodes.size());
+					NodeDefinition newDef = notExistingNodes.get(randomNum);
+					node.connectionToNode(newDef);
+					SocketMessage connectToMeMessage = SocketMessageFactory.createSystemMessage(node.getNodeDefinition(), node.getNodeDefinition(), "",
+							SocketMessageAction.connectToMe).setForwardingType(SocketMessageForwardingType.none);
+					node.sendMessage(newDef, connectToMeMessage);
+					GraphNodeCombination newNeighbourCombination = new GraphNodeCombination(node.getNodeDefinition().getId(), newDef.getId());
+					nodeInfo.getFullGraph().addCombination(newNeighbourCombination);
+					System.out.println("NEW NEIGHBOUR: " + newDef);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
 
 	private void sendBoughtItemMessageToInitiator(SocketMessage message) throws UnknownHostException, IOException {
-		Socket socket = new Socket(message.getInitiator().getIp(), message.getInitiator().getPort());
-		SocketOutputWriter writer = new SocketOutputWriter();
-		SocketMessage newMessage = SocketMessageFactory.createUserMessage().setAction(SocketMessageAction.itemBought).setInitiator(node.getNodeDefinition())
-				.setForwardingType(SocketMessageForwardingType.none).setNode(node.getNodeDefinition()).setMessage(message.getMessage());
-		writer.writeMessage(socket, newMessage);
-		socket.close();
+		Socket socket = null;
+		try {
+			socket = new Socket(message.getInitiator().getIp(), message.getInitiator().getPort());
+			SocketMessage newMessage = SocketMessageFactory.createUserMessage().setAction(SocketMessageAction.itemBought)
+					.setInitiator(node.getNodeDefinition()).setForwardingType(SocketMessageForwardingType.none).setNode(node.getNodeDefinition())
+					.setMessage(message.getMessage());
+			Map<NodeDefinition, Socket> sendTo = new TreeMap<>();
+			sendTo.put(message.getInitiator(), socket);
+			node.sendMessage(sendTo, newMessage);
+		} finally {
+			socket.close();
+		}
 	}
 
 	private void sendNeighbourMessage(SocketMessage message, SocketMessageAction action) {
@@ -353,20 +395,20 @@ public class SocketInputReader extends Thread {
 				break;
 			}
 			case back_to_sender: {
-				Socket backSocket = null;
-				if (node.getConnectedSockets().containsKey(message.getNode())) {
-					backSocket = node.getConnectedSockets().get(message.getNode());
-				} else {
-					try {
-						node.connectionToNode(message.getNode());
-						backSocket = node.getConnectedSockets().get(message.getNode());
-					} catch (UnknownHostException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-				nextTargets.put(message.getNode(), backSocket);
+				//				Socket backSocket = null;
+				//				if (node.getConnectedSockets().containsKey(message.getNode())) {
+				//					backSocket = node.getConnectedSockets().get(message.getNode());
+				//				} else {
+				//					try {
+				//						node.connectionToNode(message.getNode());
+				//						backSocket = node.getConnectedSockets().get(message.getNode());
+				//					} catch (UnknownHostException e) {
+				//						e.printStackTrace();
+				//					} catch (IOException e) {
+				//						e.printStackTrace();
+				//					}
+				//				}
+				nextTargets.put(message.getNode(), socket);
 				break;
 			}
 			default: {

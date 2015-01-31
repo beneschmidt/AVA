@@ -12,8 +12,10 @@ import com.ava.node.NodeDefinition;
 import com.ava.node.NodeType;
 import com.ava.socket.RumorStatistics;
 import com.ava.socket.SocketMessage;
+import com.ava.socket.SocketMessage.SocketMessageAction;
 import com.ava.socket.SocketMessage.SocketMessageForwardingType;
 import com.ava.socket.SocketMessageFactory;
+import com.ava.socket.TerminationCounter;
 import com.ava.utils.DoubleCountHelper;
 import com.ava.utils.DoubleCountHelper.Count;
 import com.ava.utils.FileWriterHelper;
@@ -30,7 +32,8 @@ public class ObserverMenu implements Menu {
 	 *
 	 */
 	private enum MenuPoint {
-		rumor(1, "Rumor observer"), business(2, "business observer"), exit(0, "exit");
+		rumor(1, "Rumor observer"), business(2, "business observer"), terminationCheck(3, "Check termination"), listNeighbours(4, "List neighbours"), exit(0,
+				"exit");
 
 		private final int id;
 		private final String text;
@@ -100,11 +103,62 @@ public class ObserverMenu implements Menu {
 				checkStatisticsAtNodesAndWriteToFile(ItemStatistics.getInstance(), customers);
 				break;
 			}
+			case terminationCheck: {
+				checkTermination();
+				break;
+			}
+			case listNeighbours: {
+				forceListNeighborus();
+				break;
+			}
 			default: {
 				System.out.println("EXIT");
 				System.exit(0);
 				break;
 			}
+		}
+	}
+
+	private void forceListNeighborus() {
+		SocketMessage socketMessage = SocketMessageFactory.createSystemMessage().setForwardingType(SocketMessageForwardingType.none)
+				.setNode(node.getNodeDefinition()).setMessage("").setAction(SocketMessageAction.listNeighbours);
+		node.connectToOtherNodes(nodes.values());
+		node.broadcastMessage(socketMessage);
+	}
+
+	private void checkTermination() {
+
+		node.connectToOtherNodes(nodes.values());
+
+		// create new message
+		SocketMessage socketMessage = SocketMessageFactory.createSystemMessage().setForwardingType(SocketMessageForwardingType.back_to_sender)
+				.setNode(node.getNodeDefinition()).setMessage("").setAction(SocketMessageAction.checkMessageCount);
+
+		node.broadcastMessage(socketMessage);
+		int sleepTime = 1000;
+		TimeUtils.sleep(sleepTime);
+
+		TerminationCounter tc = TerminationCounter.getInstance();
+		Count count = new Count(tc.getSendMessages(), tc.getReceivedMessages());
+		DoubleCountHelper doubleCountHelper = new DoubleCountHelper();
+		doubleCountHelper.addCount(count);
+		tc.clear();
+
+		// check again as long as the last two tests are not completely equal
+		boolean checkFinished = false;
+		while (true) {
+			node.broadcastMessage(socketMessage);
+			TimeUtils.sleep(sleepTime);
+
+			Count nextCount = new Count(tc.getSendMessages(), tc.getReceivedMessages());
+			doubleCountHelper.addCount(nextCount);
+			checkFinished = doubleCountHelper.allEqual();
+			if (checkFinished) {
+				System.out.println("terminated: " + tc);
+			} else {
+				System.out.println("ongoing: " + tc);
+			}
+			tc.clear();
 		}
 	}
 
@@ -122,28 +176,9 @@ public class ObserverMenu implements Menu {
 		SocketMessage socketMessage = SocketMessageFactory.createSystemMessage().setForwardingType(SocketMessageForwardingType.back_to_sender)
 				.setNode(node.getNodeDefinition()).setMessage(message).setAction(statistics.getMessageAction());
 
-		// check outgoing and incoming for the first time
-		int s1 = node.broadcastMessage(socketMessage);
+		node.broadcastMessage(socketMessage);
 		int sleepTime = 200;
 		TimeUtils.sleep(sleepTime);
-		int r1 = statistics.checkedNodesCount();
-
-		Count count = new Count(s1, r1);
-		DoubleCountHelper doubleCountHelper = new DoubleCountHelper();
-		doubleCountHelper.addCount(count);
-
-		// check again as long as the last two tests are not completely equal
-		boolean checkFinished = false;
-		while (!checkFinished) {
-			statistics.clear();
-			int send = node.broadcastMessage(socketMessage);
-			TimeUtils.sleep(sleepTime);
-			int received = statistics.checkedNodesCount();
-
-			Count nextCount = new Count(send, received);
-			doubleCountHelper.addCount(nextCount);
-			checkFinished = doubleCountHelper.allEqual();
-		}
 
 		FileWriterHelper helper = new FileWriterHelper(statistics.getFilePrefix() + "_" + message + ".txt");
 		String statisticString = statistics.toString();

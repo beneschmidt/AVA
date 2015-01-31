@@ -12,6 +12,7 @@ public class ResourceHelper {
 			closeable.close();
 		} catch (Exception e) {
 			// verschlucken
+			System.out.println("DIS TOO CRAZY!!!!\n-------------------------");
 		}
 	}
 }

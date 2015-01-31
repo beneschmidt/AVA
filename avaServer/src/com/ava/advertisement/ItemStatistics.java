@@ -8,7 +8,7 @@ import com.ava.node.NodeDefinition;
 import com.ava.socket.SocketMessage.SocketMessageAction;
 
 /**
- * statistics for items that were bought. It is not running in an own thread, but uses the SINGLETON pattern, so only one object is targetet
+ * statistics for items that were bought. It is not running in an own thread, but uses the SINGLETON pattern, so only one object is targeted
  * from other threads that may alter the information
  */
 public class ItemStatistics implements Statistics {

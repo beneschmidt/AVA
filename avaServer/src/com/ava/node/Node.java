@@ -23,6 +23,7 @@ public class Node implements NodeServer {
 	private volatile Map<NodeDefinition, Socket> connectedSockets;
 	private ServerSocket serverSocket;
 	private EchoStatus echoStatus;
+	SocketOutputWriter writer = new SocketOutputWriter();
 
 	public Node(NodeDefinition nodeDefinition) {
 		this.nodeDefinition = nodeDefinition;
@@ -78,7 +79,6 @@ public class Node implements NodeServer {
 
 	public int sendMessage(Map<NodeDefinition, Socket> sockets, SocketMessage message) {
 		int sendCount = 0;
-		SocketOutputWriter writer = new SocketOutputWriter();
 		synchronized (sockets) {
 			for (Socket nextSocket : sockets.values()) {
 				boolean successful = writer.writeMessage(nextSocket, message);
@@ -93,7 +93,6 @@ public class Node implements NodeServer {
 	@Override
 	public boolean sendMessage(NodeDefinition nodeToSendMessage, SocketMessage message) {
 		Socket socket = connectedSockets.get(nodeToSendMessage);
-		SocketOutputWriter writer = new SocketOutputWriter();
 		return writer.writeMessage(socket, message);
 	}
 

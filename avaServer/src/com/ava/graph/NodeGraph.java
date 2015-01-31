@@ -87,7 +87,9 @@ public class NodeGraph {
 
 		List<NodeDefinition> all = new LinkedList<>();
 		for (NodeDefinition nextDef : allNodes.values()) {
-			all.add(nextDef);
+			if (nextDef.getId() != nodeId) {
+				all.add(nextDef);
+			}
 		}
 
 		List<NodeDefinition> existing = getDefinitionsForNode(nodeId);
