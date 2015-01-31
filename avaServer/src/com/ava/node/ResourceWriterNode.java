@@ -9,8 +9,8 @@ import com.ava.socket.SocketMessageFactory;
 
 public class ResourceWriterNode extends Node {
 
-	private NodeDefinition resourceHandlerA;
-	private NodeDefinition resourceHandlerB;
+	private ResourceHandlerLink firstHandler;
+	private ResourceHandlerLink secondHandler;
 	private ResourceType resourceType;
 
 	private enum ResourceType {
@@ -19,6 +19,8 @@ public class ResourceWriterNode extends Node {
 
 	public ResourceWriterNode(NodeDefinition nodeDefinition, Map<Integer, NodeDefinition> nodes) {
 		super(nodeDefinition, nodes);
+		NodeDefinition resourceHandlerA = null;
+		NodeDefinition resourceHandlerB = null;
 		for (NodeDefinition nextNode : nodes.values()) {
 			if (nextNode.getNodeType() == NodeType.resourceHandlerA) {
 				resourceHandlerA = nextNode;
@@ -31,18 +33,35 @@ public class ResourceWriterNode extends Node {
 		}
 
 		resourceType = (nodeDefinition.getId() % 2 != 0) ? ResourceType.odd : ResourceType.even;
+		if (resourceType == ResourceType.odd) {
+			firstHandler = new ResourceHandlerLink(resourceHandlerA, "a.txt");
+			secondHandler = new ResourceHandlerLink(resourceHandlerB, "b.txt");
+		} else {
+			firstHandler = new ResourceHandlerLink(resourceHandlerB, "b.txt");
+			secondHandler = new ResourceHandlerLink(resourceHandlerA, "a.txt");
+		}
 	}
 
 	@Override
 	public void startServerAsThread() {
 		super.startServerAsThread();
-		if (resourceType == ResourceType.odd) {
-			getAccess(resourceHandlerA);
-			getAccess(resourceHandlerB);
-		} else {
-			getAccess(resourceHandlerB);
-			getAccess(resourceHandlerA);
-		}
+		getFirstHandlerAccess();
+	}
+
+	private void getFirstHandlerAccess() {
+		getAccess(getFirstHandler().getHandler());
+	}
+
+	public void getSecondHandlerAccess() {
+		getAccess(getSecondHandler().getHandler());
+	}
+
+	public ResourceHandlerLink getFirstHandler() {
+		return firstHandler;
+	}
+
+	public ResourceHandlerLink getSecondHandler() {
+		return secondHandler;
 	}
 
 	private void getAccess(NodeDefinition handler) {
@@ -52,12 +71,48 @@ public class ResourceWriterNode extends Node {
 		this.sendSingleMessage(handler, message);
 	}
 
-	public int getChangedNumber(int initialNumber, String accessFile) {
-		if ((resourceType == ResourceType.odd && accessFile.equals("a.txt")) || (resourceType == ResourceType.even && accessFile.equals("b.txt"))) {
-			return ++initialNumber;
-		} else {
-			return --initialNumber;
+	public int getFirstChangedNumber(int initialNumber) {
+		return ++initialNumber;
+	}
+
+	public int getSecondChangedNumber(int initialNumber) {
+		return --initialNumber;
+	}
+
+	public boolean isHandlerForFirstStep(String accessFile) {
+		return (resourceType == ResourceType.odd && accessFile.equals("a.txt")) || (resourceType == ResourceType.even && accessFile.equals("b.txt"));
+	}
+
+	public static class ResourceHandlerLink {
+		private NodeDefinition handler;
+		private String fileName;
+
+		public ResourceHandlerLink(NodeDefinition handler, String fileName) {
+			this.handler = handler;
+			this.fileName = fileName;
 		}
+
+		@Override
+		public String toString() {
+			return "ResourceHandlerLink [resourceHandlerA=" + handler + ", fileName=" + fileName + "]";
+		}
+
+		public NodeDefinition getHandler() {
+			return handler;
+		}
+
+		public void setHandler(NodeDefinition handler) {
+			this.handler = handler;
+		}
+
+		public String getFileName() {
+			return fileName;
+		}
+
+		public void setFileName(String fileName) {
+			this.fileName = fileName;
+		}
+
 	}
 
 }

@@ -246,18 +246,12 @@ public class SocketInputReader extends Thread {
 			}
 			case accessGranted: {
 				ResourceWriterNode resNode = (ResourceWriterNode) node;
-				FileReaderHelper helper = new FileReaderHelper(message.getMessage());
-				List<String> rows = helper.readFileAsRows();
-				Integer oldNumber = Integer.parseInt(rows.get(0));
-				int newNumber = resNode.getChangedNumber(oldNumber, message.getMessage());
-				String newNumberString = String.format("%06d", newNumber);
-				rows.remove(0);
-				rows.add(0, newNumberString);
-				rows.add(node.getNodeDefinition().getId() + "");
-				FileWriterHelper writerHelper = new FileWriterHelper(message.getMessage());
-				writerHelper.writeToFile(rows);
-				System.out.println("Rows written, old/new " + oldNumber + "/" + newNumberString);
-				sendReleaseAccessMessage(message, message.getNode());
+				if (resNode.isHandlerForFirstStep(message.getMessage())) {
+					resNode.getSecondHandlerAccess();
+				} else {
+					rewriteFile(message, resNode);
+					sendReleaseAccessMessageForBoth(message, resNode);
+				}
 				break;
 			}
 			case releaseAccess: {
@@ -283,14 +277,41 @@ public class SocketInputReader extends Thread {
 		}
 	}
 
+	private void rewriteFile(SocketMessage message, ResourceWriterNode resNode) {
+		FileReaderHelper helper = new FileReaderHelper(resNode.getFirstHandler().getFileName());
+		List<String> rows = helper.readFileAsRows();
+		Integer oldNumber = Integer.parseInt(rows.get(0));
+		int newNumber = resNode.getFirstChangedNumber(oldNumber);
+		String newNumberString = String.format("%06d", newNumber);
+		rows.remove(0);
+		rows.add(0, newNumberString);
+		rows.add(node.getNodeDefinition().getId() + "");
+		FileWriterHelper writerHelper = new FileWriterHelper(resNode.getFirstHandler().getFileName());
+		writerHelper.writeToFile(rows);
+		System.out.println("Rows written, old/new " + oldNumber + "/" + newNumberString);
+
+		FileReaderHelper secondHelper = new FileReaderHelper(resNode.getSecondHandler().getFileName());
+		List<String> secondRows = secondHelper.readFileAsRows();
+		Integer secondOldNumber = Integer.parseInt(rows.get(0));
+		int secondNewNumber = resNode.getFirstChangedNumber(secondOldNumber);
+		String secondNewNumberString = String.format("%06d", secondNewNumber);
+		secondRows.remove(0);
+		secondRows.add(0, secondNewNumberString);
+		secondRows.add(node.getNodeDefinition().getId() + "");
+		FileWriterHelper secondWriterHelper = new FileWriterHelper(resNode.getSecondHandler().getFileName());
+		secondWriterHelper.writeToFile(secondRows);
+		System.out.println("Rows written, old/new " + oldNumber + "/" + newNumberString);
+	}
+
 	private void sendAccessGrantMessage(SocketMessage message, ResourceHandlerNode resNode, NodeDefinition nodeToSendTo) {
 		message.setNode(resNode.getNodeDefinition()).setAction(SocketMessageAction.accessGranted).setMessage(resNode.getFileName());
 		node.sendSingleMessage(nodeToSendTo, message);
 	}
 
-	private void sendReleaseAccessMessage(SocketMessage message, NodeDefinition targetNode) {
+	private void sendReleaseAccessMessageForBoth(SocketMessage message, ResourceWriterNode node) {
 		message.setNode(node.getNodeDefinition()).setAction(SocketMessageAction.releaseAccess);
-		node.sendSingleMessage(targetNode, message);
+		node.sendSingleMessage(node.getFirstHandler().getHandler(), message);
+		node.sendSingleMessage(node.getSecondHandler().getHandler(), message);
 	}
 
 	/**
