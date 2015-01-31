@@ -17,7 +17,7 @@ public class ObserverStartup {
 	public static void main(String[] args) {
 		Map<Integer, NodeDefinition> nodes = NodeListReader.readNodeDefinitionsFromFile(args[0]);
 		NodeDefinition nodeDefinition = new NodeDefinition(0, "localhost", 12000, NodeType.observer);
-		Node node = new Node(nodeDefinition);
+		Node node = new Node(nodeDefinition, nodes);
 
 		node.startServerAsThread();
 

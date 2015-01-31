@@ -1,5 +1,7 @@
 package com.ava.node;
 
+import java.util.Map;
+
 public class NodeFactory {
 
 	/**
@@ -7,16 +9,25 @@ public class NodeFactory {
 	 * @param nodeDefinition
 	 * @return new node
 	 */
-	public static Node createNode(NodeDefinition nodeDefinition) {
+	public static Node createNode(NodeDefinition nodeDefinition, Map<Integer, NodeDefinition> nodes) {
 		switch (nodeDefinition.getNodeType()) {
 			case business: {
-				return new BusinessNode(nodeDefinition);
+				return new BusinessNode(nodeDefinition, nodes);
 			}
 			case customer: {
-				return new CustomerNode(nodeDefinition);
+				return new CustomerNode(nodeDefinition, nodes);
 			}
 			case observer: {
-				return new Node(nodeDefinition);
+				return new Node(nodeDefinition, nodes);
+			}
+			case resourceHandlerA: {
+				return new ResourceHandlerNode(nodeDefinition, nodes, "a");
+			}
+			case resourceHandlerB: {
+				return new ResourceHandlerNode(nodeDefinition, nodes, "b");
+			}
+			case resourceWriter: {
+				return new ResourceWriterNode(nodeDefinition, nodes);
 			}
 			default: {
 				return null;

@@ -1,5 +1,6 @@
 package com.ava.node;
 
+import java.util.Map;
 import java.util.Random;
 
 public class BusinessNode extends Node {
@@ -9,8 +10,8 @@ public class BusinessNode extends Node {
 
 	private volatile int etat;
 
-	public BusinessNode(NodeDefinition nodeDefinition) {
-		super(nodeDefinition);
+	public BusinessNode(NodeDefinition nodeDefinition, Map<Integer, NodeDefinition> nodes) {
+		super(nodeDefinition, nodes);
 		Random rand = new Random();
 		int randomNum = rand.nextInt((MAX_ETAT - MIN_ETAT) + 1) + MIN_ETAT;
 		this.etat = randomNum;

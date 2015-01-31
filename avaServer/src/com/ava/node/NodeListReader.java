@@ -19,7 +19,6 @@ public class NodeListReader {
 		for (String nextLine : lines) {
 			NodeDefinition nodeDefinition = new NodeDefinition(nextLine);
 			nodes.put(nodeDefinition.getId(), nodeDefinition);
-			System.out.println(nextLine);
 		}
 		System.out.println("Insgesamt gefunden: " + nodes.size());
 		return nodes;

@@ -31,6 +31,7 @@
 		<antcall target="package.graphcreator" />
 		<antcall target="package.oberserver" />
 		<antcall target="package.business" />
+		<antcall target="package.resource" />
 		<antcall target="copy.setup" />
 		<antcall target="copy.to.desktop" />
 	</target>
@@ -164,6 +165,28 @@
 				<attribute name="Implementation-Title" value="${businessjartitle}" />
 				<attribute name="Implementation-Version" value="${version}" />
 				<attribute name="Main-Class" value="${businessmainclass}" />
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Built-Time" value="${time}" />
+				<attribute name="Class-Path" value="lib/gson-2.2.4.jar" />
+			</manifest>
+		</jar>
+	</target>
+
+	<!-- die kompilierten class-Dateien in einer JAR verpacken -->
+	<target name="package.resource" depends="init">
+		<!-- aktuelle Zeit merken -->
+		<tstamp>
+			<format property="time" pattern="dd.MM.yyyy HH:mm:ss" locale="de,DE" />
+		</tstamp>
+
+		<!-- .class-Dateien in JAR verpacken -->
+		<jar destfile="${dist}/${resourcejarname}">
+			<fileset dir="${classes}" />
+
+			<manifest>
+				<attribute name="Implementation-Title" value="${resourcejartitle}" />
+				<attribute name="Implementation-Version" value="${version}" />
+				<attribute name="Main-Class" value="${resourcemainclass}" />
 				<attribute name="Built-By" value="${user.name}" />
 				<attribute name="Built-Time" value="${time}" />
 				<attribute name="Class-Path" value="lib/gson-2.2.4.jar" />

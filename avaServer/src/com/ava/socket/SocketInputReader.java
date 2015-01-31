@@ -25,9 +25,13 @@ import com.ava.node.EchoStatus.EchoColor;
 import com.ava.node.Node;
 import com.ava.node.NodeDefinition;
 import com.ava.node.NodeType;
+import com.ava.node.ResourceHandlerNode;
+import com.ava.node.ResourceWriterNode;
 import com.ava.socket.SocketMessage.SocketMessageAction;
 import com.ava.socket.SocketMessage.SocketMessageForwardingType;
 import com.ava.utils.EchoAnalysis;
+import com.ava.utils.FileReaderHelper;
+import com.ava.utils.FileWriterHelper;
 import com.ava.utils.ResourceHelper;
 
 /**
@@ -226,10 +230,67 @@ public class SocketInputReader extends Thread {
 				}
 				break;
 			}
+			// ----------- Uebung 3
+			case getAccess: {
+				NodeDefinition requestingNode = message.getNode();
+				ResourceHandlerNode resNode = (ResourceHandlerNode) node;
+				synchronized (resNode.getAccessQueue()) {
+					System.out.println("Node " + requestingNode.getId() + " tries to get access");
+					boolean gotDirectAccess = resNode.getAccess(requestingNode);
+					if (gotDirectAccess) {
+						sendAccessGrantMessage(message, resNode, requestingNode);
+						System.out.println("Node " + requestingNode.getId() + " is granted direct access");
+					}
+				}
+				break;
+			}
+			case accessGranted: {
+				ResourceWriterNode resNode = (ResourceWriterNode) node;
+				FileReaderHelper helper = new FileReaderHelper(message.getMessage());
+				List<String> rows = helper.readFileAsRows();
+				Integer oldNumber = Integer.parseInt(rows.get(0));
+				int newNumber = resNode.getChangedNumber(oldNumber, message.getMessage());
+				String newNumberString = String.format("%06d", newNumber);
+				rows.remove(0);
+				rows.add(0, newNumberString);
+				rows.add(node.getNodeDefinition().getId() + "");
+				FileWriterHelper writerHelper = new FileWriterHelper(message.getMessage());
+				writerHelper.writeToFile(rows);
+				System.out.println("Rows written, old/new " + oldNumber + "/" + newNumberString);
+				sendReleaseAccessMessage(message, message.getNode());
+				break;
+			}
+			case releaseAccess: {
+				NodeDefinition requestingNode = message.getNode();
+				System.out.println("Node " + requestingNode.getId() + " releases his access");
+				ResourceHandlerNode resNode = (ResourceHandlerNode) node;
+				synchronized (resNode.getAccessQueue()) {
+					System.out.println("RELEASE: try to release " + message.getNode().getId());
+					resNode.releaseAccess(message.getNode());
+					if (resNode.nextAccessPossible()) {
+						NodeDefinition nextNode = resNode.grantNextAccess();
+						sendAccessGrantMessage(message, resNode, nextNode);
+						System.out.println("Node " + nextNode.getId() + " is granted follow access");
+					} else {
+						System.out.println("No further action possible");
+					}
+				}
+				break;
+			}
 			default: {
 				node.sendMessage(nextTargets, message);
 			}
 		}
+	}
+
+	private void sendAccessGrantMessage(SocketMessage message, ResourceHandlerNode resNode, NodeDefinition nodeToSendTo) {
+		message.setNode(resNode.getNodeDefinition()).setAction(SocketMessageAction.accessGranted).setMessage(resNode.getFileName());
+		node.sendSingleMessage(nodeToSendTo, message);
+	}
+
+	private void sendReleaseAccessMessage(SocketMessage message, NodeDefinition targetNode) {
+		message.setNode(node.getNodeDefinition()).setAction(SocketMessageAction.releaseAccess);
+		node.sendSingleMessage(targetNode, message);
 	}
 
 	/**

@@ -21,14 +21,16 @@ public class Node implements NodeServer {
 
 	private final NodeDefinition nodeDefinition;
 	private volatile Map<NodeDefinition, Socket> connectedSockets;
+	protected Map<Integer, NodeDefinition> nodes;
 	private ServerSocket serverSocket;
 	private EchoStatus echoStatus;
-	SocketOutputWriter writer = new SocketOutputWriter();
+	protected SocketOutputWriter writer = new SocketOutputWriter();
 
-	public Node(NodeDefinition nodeDefinition) {
+	public Node(NodeDefinition nodeDefinition, Map<Integer, NodeDefinition> nodes) {
 		this.nodeDefinition = nodeDefinition;
 		this.connectedSockets = new TreeMap<>();
 		echoStatus = new EchoStatus();
+		this.nodes = nodes;
 	}
 
 	public NodeDefinition getNodeDefinition() {
@@ -94,6 +96,19 @@ public class Node implements NodeServer {
 	public boolean sendMessage(NodeDefinition nodeToSendMessage, SocketMessage message) {
 		Socket socket = connectedSockets.get(nodeToSendMessage);
 		return writer.writeMessage(socket, message);
+	}
+
+	public boolean sendSingleMessage(NodeDefinition n, SocketMessage message) {
+		Socket socket = null;
+		try {
+			socket = new Socket(n.getIp(), n.getPort());
+			return writer.writeMessage(socket, message);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		} finally {
+			ResourceHelper.close(socket);
+		}
 	}
 
 	public Map<NodeDefinition, Socket> getConnectedSockets() {

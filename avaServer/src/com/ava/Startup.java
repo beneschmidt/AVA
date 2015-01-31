@@ -37,16 +37,14 @@ public class Startup {
 				nodeDefinition = nodes.get(Integer.parseInt(args[2]));
 			}
 			System.out.println("I am: " + nodeDefinition);
-			node = new Node(nodeDefinition);
+			node = new Node(nodeDefinition, nodes);
 			List<NodeDefinition> neighbours = loadOwnNeighboursFromFile(nodeDefinition.getId(), nodes, args[1]);
 			logNeighbours(neighbours);
 
 			node.startServerAsThread();
 			node.connectToOtherNodes(neighbours);
-			SocketMessage socketMessage = SocketMessageFactory.createSystemMessage()
-					.setNode(node.getNodeDefinition())
-					.setMessage("hey I'm " + node.getNodeDefinition())
-					.setAction(SocketMessageAction.simple);
+			SocketMessage socketMessage = SocketMessageFactory.createSystemMessage().setNode(node.getNodeDefinition())
+					.setMessage("hey I'm " + node.getNodeDefinition()).setAction(SocketMessageAction.simple);
 			node.broadcastMessage(socketMessage);
 
 			// main thread runs the main menu

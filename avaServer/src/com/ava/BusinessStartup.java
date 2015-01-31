@@ -10,8 +10,8 @@ import java.util.Properties;
 import com.ava.advertisement.AdvertisementMessageList;
 import com.ava.advertisement.BoughtItems;
 import com.ava.advertisement.PurchaseDecisionMessageList;
-import com.ava.graph.NodeGraph;
 import com.ava.graph.GraphInformation;
+import com.ava.graph.NodeGraph;
 import com.ava.menu.MainMenu;
 import com.ava.menu.SimpleNodeSelectionMenu;
 import com.ava.node.Node;
@@ -50,7 +50,7 @@ public class BusinessStartup {
 			}
 			System.out.println("I am: " + nodeDefinition);
 			NodeGraph graph = createNodeGraph(nodes, args[1]);
-			Node node = NodeFactory.createNode(nodeDefinition);
+			Node node = NodeFactory.createNode(nodeDefinition, nodes);
 			// singleton update
 			GraphInformation.getInstance().setFullGraph(graph);
 

@@ -35,7 +35,14 @@ public class NodeDefinition implements Comparable<NodeDefinition> {
 	}
 
 	private List<String> parseDefinitionByString(String stringDefinition) {
-		String pattern = "(\\d{0,2}) (.*):(\\d{1,6}) ((customer|business|observer))";
+		StringBuilder s = new StringBuilder("((");
+		for (NodeType type : NodeType.values()) {
+			s.append(type).append("|");
+		}
+		s.deleteCharAt(s.lastIndexOf("|"));
+		s.append("))");
+
+		String pattern = "(\\d{0,3}) (.*):(\\d{1,6}) " + s.toString();
 		// Create a Pattern object
 		Pattern r = Pattern.compile(pattern);
 		List<String> values = new LinkedList<String>();
