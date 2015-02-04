@@ -12,6 +12,7 @@ public class ResourceWriterNode extends Node {
 	private ResourceHandlerLink firstHandler;
 	private ResourceHandlerLink secondHandler;
 	private ResourceType resourceType;
+	private boolean jobDone;
 
 	private enum ResourceType {
 		even, odd
@@ -48,7 +49,7 @@ public class ResourceWriterNode extends Node {
 		getFirstHandlerAccess();
 	}
 
-	private void getFirstHandlerAccess() {
+	public void getFirstHandlerAccess() {
 		getAccess(getFirstHandler().getHandler());
 	}
 
@@ -81,6 +82,14 @@ public class ResourceWriterNode extends Node {
 
 	public boolean isHandlerForFirstStep(String accessFile) {
 		return (resourceType == ResourceType.odd && accessFile.equals("a.txt")) || (resourceType == ResourceType.even && accessFile.equals("b.txt"));
+	}
+
+	public boolean isJobDone() {
+		return jobDone;
+	}
+
+	public void setJobDone(boolean jobDone) {
+		this.jobDone = jobDone;
 	}
 
 	public static class ResourceHandlerLink {

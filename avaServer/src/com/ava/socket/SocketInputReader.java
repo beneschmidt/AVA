@@ -234,15 +234,16 @@ public class SocketInputReader extends Thread {
 			case getAccess: {
 				NodeDefinition requestingNode = message.getNode();
 				ResourceHandlerNode resNode = (ResourceHandlerNode) node;
-				synchronized (resNode.getAccessQueue()) {
-					System.out.println("Node " + requestingNode.getId() + " tries to get access");
+				synchronized (node) {
+					System.out.println("ASK FOR ACCESS: " + requestingNode.getId() + " tries to get access, currently blocking: "
+							+ resNode.getCurrentlyBlocking());
 					boolean gotDirectAccess = resNode.getAccess(requestingNode);
 					if (gotDirectAccess) {
 						sendAccessGrantMessage(message, resNode, requestingNode);
-						System.out.println("Node " + requestingNode.getId() + " is granted direct access");
+						//						System.out.println("GRANTED " + requestingNode.getId() + ": is granted direct access");
 					} else {
 						sendResourceLockedMessage(message, resNode, requestingNode);
-						System.out.println("Node " + requestingNode.getId() + " is informed about current lock status");
+						System.out.println("NOT GRANTED " + requestingNode.getId() + ": is informed about current lock status");
 					}
 				}
 				break;
@@ -250,10 +251,14 @@ public class SocketInputReader extends Thread {
 			case accessGranted: {
 				ResourceWriterNode resNode = (ResourceWriterNode) node;
 				if (resNode.isHandlerForFirstStep(message.getMessage())) {
+					System.out.println("first resource granted");
 					resNode.getSecondHandlerAccess();
 				} else {
+					System.out.println("second resource granted, try to write file");
 					rewriteFile(message, resNode);
+					System.out.println("file written");
 					sendReleaseAccessMessageForBoth(message, resNode);
+					resNode.setJobDone(true);
 				}
 				break;
 			}
@@ -261,15 +266,15 @@ public class SocketInputReader extends Thread {
 				NodeDefinition requestingNode = message.getNode();
 				System.out.println("Node " + requestingNode.getId() + " releases his access");
 				ResourceHandlerNode resNode = (ResourceHandlerNode) node;
-				synchronized (resNode.getAccessQueue()) {
+				synchronized (node) {
 					System.out.println("RELEASE: try to release " + message.getNode().getId());
 					resNode.releaseAccess(message.getNode());
 					if (resNode.nextAccessPossible()) {
 						NodeDefinition nextNode = resNode.grantNextAccess();
 						sendAccessGrantMessage(message, resNode, nextNode);
-						System.out.println("Node " + nextNode.getId() + " is granted follow access");
+						//						System.out.println("GRANTED " + nextNode.getId() + ": is granted follow access");
 					} else {
-						System.out.println("No further action possible");
+						System.out.println("DONE");
 					}
 				}
 				break;
@@ -278,19 +283,53 @@ public class SocketInputReader extends Thread {
 				ResourceWriterNode resNode = (ResourceWriterNode) node;
 				// if the second resource is blocked, there may be a deadlock with the connection to the first resource
 				if (!resNode.isHandlerForFirstStep(message.getMessage())) {
-					SocketMessage newMessage = SocketMessageFactory.createSystemMessage(resNode.getNodeDefinition(), resNode.getNodeDefinition(), "",
-							SocketMessageAction.checkForDeadlock);
-					sendCheckDeadlockMessage(newMessage, resNode, resNode.getSecondHandler().getHandler());
+					Random rand = new Random();
+					int randomNum = rand.nextInt(1000 + 1);
+					try {
+						Thread.sleep(randomNum);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+
+					if (!resNode.isJobDone()) {
+						SocketMessage newMessage = SocketMessageFactory.createSystemMessage(resNode.getNodeDefinition(), resNode.getNodeDefinition(), "",
+								SocketMessageAction.checkForDeadlock);
+						sendCheckDeadlockMessage(newMessage, resNode.getNodeDefinition(), resNode.getSecondHandler().getHandler());
+						System.out.println("POSSIBLE DEADLOCK, SEND MESSAGE TO " + resNode.getSecondHandler().getHandler().getId());
+					} else {
+
+					}
+				} else {
+					System.out.println("Resource currently block, but it can wait");
 				}
 				break;
 			}
 			case checkForDeadlock: {
 				if (node instanceof ResourceWriterNode) {
-					// TODO: write to the nodes, that I want lock to, but don't have
+					ResourceWriterNode resNode = (ResourceWriterNode) node;
+					if (node.getNodeDefinition().equals(message.getInitiator())) {
+						System.out.println("DEADLOCK FOUND AT: " + message.getNode().getId());
+						SocketMessage releaseMessage = SocketMessageFactory.createSystemMessage(node.getNodeDefinition(), node.getNodeDefinition(), "",
+								SocketMessageAction.releaseAccess);
+						sendReleaseAccessMessageForBoth(releaseMessage, resNode);
+						Random rand = new Random();
+						int randomNum = rand.nextInt(1000 + 1);
+						try {
+							Thread.sleep(randomNum);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						resNode.getFirstHandlerAccess();
+					} else {
+						//						System.out.println("No Deadlock found, but I require help of second handler! Try to abort");
+						sendCheckDeadlockMessage(message, resNode.getNodeDefinition(), resNode.getSecondHandler().getHandler());
+					}
 				} else {
-					// TODO: write to the node that locks this
 					ResourceHandlerNode handler = (ResourceHandlerNode) node;
-					handler.getCurrentlyBlocking();
+					if (handler.isCurrentlyBlocked()) {
+						System.out.println("Check for Deadlock for: " + message.getInitiator().getId());
+						sendCheckDeadlockMessage(message, handler.getNodeDefinition(), handler.getCurrentlyBlocking());
+					}
 				}
 			}
 			default: {
@@ -315,24 +354,25 @@ public class SocketInputReader extends Thread {
 		FileReaderHelper secondHelper = new FileReaderHelper(resNode.getSecondHandler().getFileName());
 		List<String> secondRows = secondHelper.readFileAsRows();
 		Integer secondOldNumber = Integer.parseInt(rows.get(0));
-		int secondNewNumber = resNode.getFirstChangedNumber(secondOldNumber);
+		int secondNewNumber = resNode.getSecondChangedNumber(secondOldNumber);
 		String secondNewNumberString = String.format("%06d", secondNewNumber);
 		secondRows.remove(0);
 		secondRows.add(0, secondNewNumberString);
 		secondRows.add(node.getNodeDefinition().getId() + "");
 		FileWriterHelper secondWriterHelper = new FileWriterHelper(resNode.getSecondHandler().getFileName());
 		secondWriterHelper.writeToFile(secondRows);
-		System.out.println("Rows written, old/new " + oldNumber + "/" + newNumberString);
+		System.out.println("Rows written, old/new " + secondOldNumber + "/" + secondNewNumberString);
 	}
 
-	private void sendCheckDeadlockMessage(SocketMessage message, ResourceWriterNode resNode, NodeDefinition nodeToSendTo) {
-		message.setNode(resNode.getNodeDefinition()).setAction(SocketMessageAction.checkForDeadlock);
+	private void sendCheckDeadlockMessage(SocketMessage message, NodeDefinition nodeDefinition, NodeDefinition nodeToSendTo) {
+		message.setNode(nodeDefinition).setAction(SocketMessageAction.checkForDeadlock);
 		node.sendSingleMessage(nodeToSendTo, message);
 	}
 
 	private void sendAccessGrantMessage(SocketMessage message, ResourceHandlerNode resNode, NodeDefinition nodeToSendTo) {
 		message.setNode(resNode.getNodeDefinition()).setAction(SocketMessageAction.accessGranted).setMessage(resNode.getFileName());
 		node.sendSingleMessage(nodeToSendTo, message);
+		System.out.println("============ ACCESS GRANTED TO " + nodeToSendTo.getId());
 	}
 
 	private void sendResourceLockedMessage(SocketMessage message, ResourceHandlerNode resNode, NodeDefinition nodeToSendTo) {
@@ -509,19 +549,6 @@ public class SocketInputReader extends Thread {
 				break;
 			}
 			case back_to_sender: {
-				//				Socket backSocket = null;
-				//				if (node.getConnectedSockets().containsKey(message.getNode())) {
-				//					backSocket = node.getConnectedSockets().get(message.getNode());
-				//				} else {
-				//					try {
-				//						node.connectionToNode(message.getNode());
-				//						backSocket = node.getConnectedSockets().get(message.getNode());
-				//					} catch (UnknownHostException e) {
-				//						e.printStackTrace();
-				//					} catch (IOException e) {
-				//						e.printStackTrace();
-				//					}
-				//				}
 				nextTargets.put(message.getNode(), socket);
 				break;
 			}

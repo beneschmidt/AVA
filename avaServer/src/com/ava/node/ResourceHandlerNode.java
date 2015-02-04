@@ -56,7 +56,9 @@ public class ResourceHandlerNode extends Node {
 
 	public NodeDefinition grantNextAccess() {
 		if (nextAccessPossible()) {
-			return accessQueue.pop();
+			NodeDefinition nextNode = accessQueue.pop();
+			currentlyBlocking = nextNode;
+			return nextNode;
 		} else {
 			throw new IndexOutOfBoundsException("There's no node in queue or it is blocked");
 		}
