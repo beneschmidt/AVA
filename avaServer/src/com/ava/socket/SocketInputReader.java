@@ -353,7 +353,7 @@ public class SocketInputReader extends Thread {
 
 		FileReaderHelper secondHelper = new FileReaderHelper(resNode.getSecondHandler().getFileName());
 		List<String> secondRows = secondHelper.readFileAsRows();
-		Integer secondOldNumber = Integer.parseInt(rows.get(0));
+		Integer secondOldNumber = Integer.parseInt(secondRows.get(0));
 		int secondNewNumber = resNode.getSecondChangedNumber(secondOldNumber);
 		String secondNewNumberString = String.format("%06d", secondNewNumber);
 		secondRows.remove(0);
