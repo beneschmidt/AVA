@@ -79,4 +79,8 @@ public class ResourceHandlerNode extends Node {
 		return "ResourceHandlerNode [fileName=" + fileName + ", accessQueue=" + accessQueue.size() + "]";
 	}
 
+	public NodeDefinition getCurrentlyBlocking() {
+		return currentlyBlocking;
+	}
+
 }

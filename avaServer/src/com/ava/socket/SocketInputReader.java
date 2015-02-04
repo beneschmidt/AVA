@@ -240,6 +240,9 @@ public class SocketInputReader extends Thread {
 					if (gotDirectAccess) {
 						sendAccessGrantMessage(message, resNode, requestingNode);
 						System.out.println("Node " + requestingNode.getId() + " is granted direct access");
+					} else {
+						sendResourceLockedMessage(message, resNode, requestingNode);
+						System.out.println("Node " + requestingNode.getId() + " is informed about current lock status");
 					}
 				}
 				break;
@@ -270,6 +273,25 @@ public class SocketInputReader extends Thread {
 					}
 				}
 				break;
+			}
+			case resourceCurrentlyLocked: {
+				ResourceWriterNode resNode = (ResourceWriterNode) node;
+				// if the second resource is blocked, there may be a deadlock with the connection to the first resource
+				if (!resNode.isHandlerForFirstStep(message.getMessage())) {
+					SocketMessage newMessage = SocketMessageFactory.createSystemMessage(resNode.getNodeDefinition(), resNode.getNodeDefinition(), "",
+							SocketMessageAction.checkForDeadlock);
+					sendCheckDeadlockMessage(newMessage, resNode, resNode.getSecondHandler().getHandler());
+				}
+				break;
+			}
+			case checkForDeadlock: {
+				if (node instanceof ResourceWriterNode) {
+					// TODO: write to the nodes, that I want lock to, but don't have
+				} else {
+					// TODO: write to the node that locks this
+					ResourceHandlerNode handler = (ResourceHandlerNode) node;
+					handler.getCurrentlyBlocking();
+				}
 			}
 			default: {
 				node.sendMessage(nextTargets, message);
@@ -303,8 +325,18 @@ public class SocketInputReader extends Thread {
 		System.out.println("Rows written, old/new " + oldNumber + "/" + newNumberString);
 	}
 
+	private void sendCheckDeadlockMessage(SocketMessage message, ResourceWriterNode resNode, NodeDefinition nodeToSendTo) {
+		message.setNode(resNode.getNodeDefinition()).setAction(SocketMessageAction.checkForDeadlock);
+		node.sendSingleMessage(nodeToSendTo, message);
+	}
+
 	private void sendAccessGrantMessage(SocketMessage message, ResourceHandlerNode resNode, NodeDefinition nodeToSendTo) {
 		message.setNode(resNode.getNodeDefinition()).setAction(SocketMessageAction.accessGranted).setMessage(resNode.getFileName());
+		node.sendSingleMessage(nodeToSendTo, message);
+	}
+
+	private void sendResourceLockedMessage(SocketMessage message, ResourceHandlerNode resNode, NodeDefinition nodeToSendTo) {
+		message.setNode(resNode.getNodeDefinition()).setAction(SocketMessageAction.resourceCurrentlyLocked).setMessage(resNode.getFileName());
 		node.sendSingleMessage(nodeToSendTo, message);
 	}
 
