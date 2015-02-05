@@ -32,6 +32,7 @@ import com.ava.socket.SocketMessage.SocketMessageForwardingType;
 import com.ava.utils.EchoAnalysis;
 import com.ava.utils.FileReaderHelper;
 import com.ava.utils.FileWriterHelper;
+import com.ava.utils.IdSet;
 import com.ava.utils.ResourceHelper;
 
 /**
@@ -292,8 +293,9 @@ public class SocketInputReader extends Thread {
 					}
 
 					if (!resNode.isJobDone()) {
-						SocketMessage newMessage = SocketMessageFactory.createSystemMessage(resNode.getNodeDefinition(), resNode.getNodeDefinition(), "",
-								SocketMessageAction.checkForDeadlock);
+						SocketMessage newMessage = SocketMessageFactory.createSystemMessage(resNode.getNodeDefinition(), resNode.getNodeDefinition(), resNode
+								.getNodeDefinition().getId() + "",
+								SocketMessageAction.obpl);
 						sendCheckDeadlockMessage(newMessage, resNode.getNodeDefinition(), resNode.getSecondHandler().getHandler());
 						System.out.println("POSSIBLE DEADLOCK, SEND MESSAGE TO " + resNode.getSecondHandler().getHandler().getId());
 					} else {
@@ -304,33 +306,51 @@ public class SocketInputReader extends Thread {
 				}
 				break;
 			}
-			case checkForDeadlock: {
+			case obpl: {
+				IdSet set = new IdSet();
+				set.loadFromString(message.getMessage());
+				set.addId(node.getNodeDefinition().getId());
+				message.setMessage(set.toString());
 				if (node instanceof ResourceWriterNode) {
 					ResourceWriterNode resNode = (ResourceWriterNode) node;
-					if (node.getNodeDefinition().equals(message.getInitiator())) {
-						System.out.println("DEADLOCK FOUND AT: " + message.getNode().getId());
-						SocketMessage releaseMessage = SocketMessageFactory.createSystemMessage(node.getNodeDefinition(), node.getNodeDefinition(), "",
-								SocketMessageAction.releaseAccess);
-						sendReleaseAccessMessageForBoth(releaseMessage, resNode);
-						Random rand = new Random();
-						int randomNum = rand.nextInt(1000 + 1);
-						try {
-							Thread.sleep(randomNum);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						resNode.getFirstHandlerAccess();
+					// if next node is already in list, we found a deadlock
+					NodeDefinition secondHandler = resNode.getSecondHandler().getHandler();
+					if (set.getValues().contains(secondHandler.getId())) {
+						System.out.println("DEADLOCK FOUND AT: " + secondHandler.getId() + ", LIST: " + message.getMessage()
+								+ ", next ID: " + secondHandler.getId());
+						sendDeadlockFoundMessage(resNode.getNodeDefinition(), secondHandler);
 					} else {
-						//						System.out.println("No Deadlock found, but I require help of second handler! Try to abort");
-						sendCheckDeadlockMessage(message, resNode.getNodeDefinition(), resNode.getSecondHandler().getHandler());
+						sendCheckDeadlockMessage(message, resNode.getNodeDefinition(), secondHandler);
 					}
 				} else {
 					ResourceHandlerNode handler = (ResourceHandlerNode) node;
 					if (handler.isCurrentlyBlocked()) {
-						System.out.println("Check for Deadlock for: " + message.getInitiator().getId());
-						sendCheckDeadlockMessage(message, handler.getNodeDefinition(), handler.getCurrentlyBlocking());
+						if (set.getValues().contains(handler.getCurrentlyBlocking().getId())) {
+							System.out.println("DEADLOCK FOUND AT: " + handler.getCurrentlyBlocking().getId() + ", LIST: " + message.getMessage()
+									+ ", next ID: " + handler.getCurrentlyBlocking().getId());
+							sendDeadlockFoundMessage(handler.getNodeDefinition(), handler.getCurrentlyBlocking());
+						} else {
+							System.out.println("Check for Deadlock for: " + handler.getCurrentlyBlocking());
+							sendCheckDeadlockMessage(message, handler.getNodeDefinition(), handler.getCurrentlyBlocking());
+						}
 					}
 				}
+				break;
+			}
+			case deadlockFound: {
+				ResourceWriterNode resNode = (ResourceWriterNode) node;
+				System.out.println("DEADLOCK FOUND AT MY OWN NODE: " + message.getNode().getId());
+				SocketMessage releaseMessage = SocketMessageFactory.createSystemMessage(node.getNodeDefinition(), node.getNodeDefinition(), "",
+						SocketMessageAction.releaseAccess);
+				sendReleaseAccessMessageForBoth(releaseMessage, resNode);
+				Random rand = new Random();
+				int randomNum = rand.nextInt(1000 + 1);
+				try {
+					Thread.sleep(randomNum);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				resNode.getFirstHandlerAccess();
 			}
 			default: {
 				node.sendMessage(nextTargets, message);
@@ -365,7 +385,12 @@ public class SocketInputReader extends Thread {
 	}
 
 	private void sendCheckDeadlockMessage(SocketMessage message, NodeDefinition nodeDefinition, NodeDefinition nodeToSendTo) {
-		message.setNode(nodeDefinition).setAction(SocketMessageAction.checkForDeadlock);
+		message.setNode(nodeDefinition).setAction(SocketMessageAction.obpl);
+		node.sendSingleMessage(nodeToSendTo, message);
+	}
+
+	private void sendDeadlockFoundMessage(NodeDefinition nodeDefinition, NodeDefinition nodeToSendTo) {
+		SocketMessage message = SocketMessageFactory.createSystemMessage(nodeDefinition, nodeDefinition, "", SocketMessageAction.deadlockFound);
 		node.sendSingleMessage(nodeToSendTo, message);
 	}
 

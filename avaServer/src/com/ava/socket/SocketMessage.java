@@ -24,7 +24,7 @@ public class SocketMessage {
 	public enum SocketMessageAction {
 		exit, rumor, simple, checkRumor, rumor_checked, closed, advertisement, purchaseDecision, itemBought, checkItemBought,
 		itemBoughtChecked, explorer, echo, clearEcho, connectToMe, checkMessageCount, messageCountChecked, listNeighbours, getAccess, accessGranted, releaseAccess,
-		resourceCurrentlyLocked, checkForDeadlock;
+		resourceCurrentlyLocked, obpl, deadlockFound;
 	}
 
 	private SocketMessageSource source;
